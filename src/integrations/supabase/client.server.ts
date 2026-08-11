@@ -33,14 +33,14 @@ function createSupabaseAdminClient() {
   const SUPABASE_URL =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
-    "https://qaigkeawaqcoafaquyni.supabase.co";
+    "https://vtupzxfjqtjyojcckduu.supabase.co";
 
   const SUPABASE_SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_VAp_H7uMDv99KEso_dCpRQ__gavmEGp";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dXB6eGZqcXRqeW9qY2NrZHV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjQ0MTk0NSwiZXhwIjoyMTAyMDE3OTQ1fQ.SzofQbBc2RtDmfu7KArz61LKWduq6euOH3gqwRgJMnQ";
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [

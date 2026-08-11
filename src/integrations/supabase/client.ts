@@ -32,13 +32,13 @@ function createSupabaseClient() {
     import.meta.env.VITE_SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
-    "https://qaigkeawaqcoafaquyni.supabase.co";
+    "https://vtupzxfjqtjyojcckduu.supabase.co";
 
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_VAp_H7uMDv99KEso_dCpRQ__gavmEGp";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dXB6eGZqcXRqeW9qY2NrZHV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NDE5NDUsImV4cCI6MjEwMjAxNzk0NX0.abUpS6G_SlWpvIBDeLMIRs7mis-OFry5juD5JlF50tY";
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
