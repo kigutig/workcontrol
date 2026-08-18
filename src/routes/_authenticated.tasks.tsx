@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Plus, ArrowLeft, ArrowRight, MoreVertical, Loader2, Eye, Pencil, Trash2, User } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, ArrowLeft, ArrowRight, MoreVertical, Loader2, Eye, Pencil, Trash2, User, Search } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -87,6 +87,38 @@ function TasksKanban() {
     queryKey: ["machines"],
     queryFn: async () => (await supabase.from("machines").select("id,code,name").order("code")).data ?? [],
   });
+
+  // Filter States
+  const [search, setSearch] = useState("");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+
+  const profilesMap = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
+  const machinesMap = useMemo(() => new Map(machines.map((m) => [m.id, m])), [machines]);
+
+  const filteredTasks = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return tasks.filter((t) => {
+      const assignee = t.assignee_id ? profilesMap.get(t.assignee_id) : null;
+      const machine = t.machine_id ? machinesMap.get(t.machine_id) : null;
+
+      const matchesSearch =
+        !q ||
+        t.title.toLowerCase().includes(q) ||
+        (t.description && t.description.toLowerCase().includes(q)) ||
+        (machine && (machine.code.toLowerCase().includes(q) || machine.name.toLowerCase().includes(q))) ||
+        (assignee && assignee.name.toLowerCase().includes(q));
+
+      const matchesAssignee =
+        assigneeFilter === "all" ||
+        (assigneeFilter === "unassigned" ? !t.assignee_id : t.assignee_id === assigneeFilter);
+      const matchesType = typeFilter === "all" || t.type === typeFilter;
+      const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
+
+      return matchesSearch && matchesAssignee && matchesType && matchesPriority;
+    });
+  }, [tasks, search, assigneeFilter, typeFilter, priorityFilter, profilesMap, machinesMap]);
 
   const move = useMutation({
     mutationFn: async ({ id, status, currentStartedAt, intervals }: { id: string; status: Status; currentStartedAt?: string | null; intervals?: any[] }) => {
@@ -246,9 +278,71 @@ function TasksKanban() {
       {isLoading ? (
         <div className="grid place-items-center py-24"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {STATUS.map((col) => {
-            const colTasks = tasks.filter((t) => t.status === col.id);
+        <>
+          {/* Filter and Search Bar */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 mb-6 bg-surface-elevated p-3 rounded-2xl border border-border/50">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por título, máquina, responsável..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-background"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Funcionário Filter */}
+              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                <SelectTrigger className="w-44 h-10 text-xs bg-background">
+                  <SelectValue placeholder="Funcionário" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Funcionários</SelectItem>
+                  <SelectItem value="unassigned">Sem Responsável</SelectItem>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Categoria Filter */}
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-36 h-10 text-xs bg-background">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Categorias</SelectItem>
+                  {TASK_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {typeIcon(t)} {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Prioridade Filter */}
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-32 h-10 text-xs bg-background">
+                  <SelectValue placeholder="Prioridade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Prioridades</SelectItem>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {STATUS.map((col) => {
+              const colTasks = filteredTasks.filter((t) => t.status === col.id);
             return (
               <div key={col.id} className="rounded-2xl border border-border/60 bg-card/50 p-4 min-h-[60vh]">
                 <div className="flex items-center justify-between mb-4">
@@ -425,6 +519,7 @@ function TasksKanban() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* Modal Detalhes e Ações da Tarefa */}

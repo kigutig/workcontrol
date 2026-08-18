@@ -87,6 +87,7 @@ function AllTasksPage() {
   // Filters & View State
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
@@ -225,12 +226,15 @@ function AllTasksPage() {
         (assignee && assignee.name.toLowerCase().includes(q));
 
       const matchesStatus = statusFilter === "all" || t.status === statusFilter;
+      const matchesAssignee =
+        assigneeFilter === "all" ||
+        (assigneeFilter === "unassigned" ? !t.assignee_id : t.assignee_id === assigneeFilter);
       const matchesType = typeFilter === "all" || t.type === typeFilter;
       const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
 
-      return matchesSearch && matchesStatus && matchesType && matchesPriority;
+      return matchesSearch && matchesStatus && matchesAssignee && matchesType && matchesPriority;
     });
-  }, [tasks, search, statusFilter, typeFilter, priorityFilter, profilesMap, machinesMap]);
+  }, [tasks, search, statusFilter, assigneeFilter, typeFilter, priorityFilter, profilesMap, machinesMap]);
 
   // Counts
   const countPending = tasks.filter((t) => t.status === "pending").length;
@@ -385,6 +389,22 @@ function AllTasksPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Funcionário Filter */}
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-44 h-10 text-xs bg-background">
+              <SelectValue placeholder="Funcionário" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Funcionários</SelectItem>
+              <SelectItem value="unassigned">Sem Responsável</SelectItem>
+              {profiles.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36 h-10 text-xs bg-background">
