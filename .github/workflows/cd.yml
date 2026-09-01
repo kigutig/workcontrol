@@ -22,16 +22,17 @@ env:
   NODE_VERSION: "20"
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # JOB 1: Preview Deploy (PRs)
+  # JOB 1: Preview Deploy (PRs que não sejam de bots sem secrets)
   # ─────────────────────────────────────────────────────────────
   preview:
     name: 🔍 Preview Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && secrets.VERCEL_TOKEN != ''
     outputs:
       preview_url: ${{ steps.deploy.outputs.preview_url }}
 
@@ -54,7 +55,7 @@ jobs:
           echo "{\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\",\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\"}" > .vercel/project.json
 
       - name: 🏗️ Build with Vercel CLI
-        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -62,7 +63,7 @@ jobs:
       - name: 🚀 Deploy to Vercel (Preview)
         id: deploy
         run: |
-          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt)
           PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ >]+' | tail -1)
           echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
           echo "✅ Preview URL: $PREVIEW_URL"
@@ -95,7 +96,7 @@ jobs:
     name: 🏭 Production Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     outputs:
       production_url: ${{ steps.deploy.outputs.production_url }}
 
@@ -120,7 +121,7 @@ jobs:
           echo "{\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\",\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\"}" > .vercel/project.json
 
       - name: 🏗️ Build project for Production
-        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build --prod
         env:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -129,7 +130,7 @@ jobs:
       - name: 🚀 Deploy to Vercel (Production)
         id: deploy
         run: |
-          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --prod)
           PROD_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ >]+' | tail -1)
           echo "production_url=$PROD_URL" >> $GITHUB_OUTPUT
           echo "✅ Production URL: $PROD_URL"
