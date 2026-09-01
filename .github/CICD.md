@@ -28,14 +28,14 @@ PR Aberto
     ├─► 🧪 test (vitest + coverage)        → depende de quality
     ├─► 🏗️ build (vite build)               → depende de quality + security
     │
-    └─► 🚀 preview deploy (Cloudflare)    → depende do build
+    └─► 🚀 preview deploy (Vercel)        → depende do build
          └─► 🎭 E2E smoke tests (Playwright)
 
 Push para main
     │
     ├─► [todos os jobs do PR acima]
     ├─► 🛡️ security.yml completo (SBOM, Trivy, OWASP, Semgrep)
-    ├─► 🏭 production deploy (Cloudflare)
+    ├─► 🏭 production deploy (Vercel)
     │    ├─► 🎭 E2E production tests
     │    ├─► 🏠 Lighthouse CI
     │    ├─► 🏷️ Release tag automático
@@ -100,11 +100,9 @@ npm run test:security     # Apenas testes de segurança
 
 Ver [`.github/SECRETS.md`](.github/SECRETS.md) para instruções completas.
 
-**Obrigatórios:**
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
 
 ### Branch Protection (main)
 

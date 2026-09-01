@@ -4,12 +4,13 @@
 
 Configure em: **Settings → Secrets and variables → Actions → New repository secret**
 
-### Deploy (Obrigatório)
+### Deploy Vercel (Obrigatório)
 
 | Secret | Como obter |
 |--------|-----------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare Dashboard → My Profile → API Tokens → Create Token (use template "Edit Cloudflare Workers") |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → lado direito da página inicial |
+| `VERCEL_TOKEN` | Vercel Dashboard → Settings → Tokens → Create Token |
+| `VERCEL_ORG_ID` | Vercel Dashboard → Settings → General → **Team ID** (ou seu personal ID) |
+| `VERCEL_PROJECT_ID` | Vercel Dashboard → Seu projeto → Settings → General → **Project ID** |
 
 ### Supabase (Obrigatório para Build)
 
@@ -54,14 +55,31 @@ Configure em: **Settings → Branches → Add rule** para a branch `main`:
 - [x] Require conversation resolution before merging
 - [x] Include administrators
 
----
 
-## Cloudflare Pages Setup
+## Vercel Project Setup
 
-1. Vá em Cloudflare Dashboard → **Workers & Pages → Create application → Pages**
-2. Conecte ao repositório GitHub
-3. Configure:
-   - **Project name**: `workcontrol`
-   - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
-   - **Environment variables**: Adicione `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
+### 1. Instalar Vercel CLI e fazer login
+```bash
+npm i -g vercel
+vercel login
+```
+
+### 2. Vincular o projeto ao Vercel
+Execute na raiz do projeto (somente uma vez):
+```bash
+vercel link
+```
+Isso cria o arquivo `.vercel/project.json` com o `orgId` e `projectId`.
+
+### 3. Obter os IDs para os secrets
+```bash
+# Mostra o project ID e org ID
+cat .vercel/project.json
+```
+
+### 4. Configurar variáveis de ambiente no Vercel
+No Vercel Dashboard → Seu projeto → **Settings → Environment Variables**:
+- `VITE_SUPABASE_URL` → Production + Preview + Development
+- `VITE_SUPABASE_ANON_KEY` → Production + Preview + Development
+
+> ⚠️ O arquivo `.vercel/` deve estar no `.gitignore` (já está configurado ou adicione manualmente).

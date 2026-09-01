@@ -1,4 +1,4 @@
-name: 🚀 CD — Deploy Cloudflare Pages
+name: 🚀 CD — Deploy Vercel
 
 on:
   push:
@@ -20,21 +20,23 @@ concurrency:
 
 env:
   NODE_VERSION: "20"
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   # ─────────────────────────────────────────────────────────────
   # JOB 1: Preview Deploy (PRs)
   # ─────────────────────────────────────────────────────────────
   preview:
-    name: 🔍 Preview Deploy
+    name: 🔍 Preview Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: github.event_name == 'pull_request'
     environment:
       name: preview
-      url: ${{ steps.deploy.outputs.url }}
+      url: ${{ steps.deploy.outputs.preview_url }}
     outputs:
-      preview_url: ${{ steps.deploy.outputs.url }}
+      preview_url: ${{ steps.deploy.outputs.preview_url }}
 
     steps:
       - name: 📥 Checkout
@@ -49,20 +51,24 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
 
-      - name: 🏗️ Build (preview mode)
-        run: npm run build
+      - name: 📦 Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: 🔗 Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: 🏗️ Build project (Vercel)
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: 🚀 Deploy to Cloudflare Pages (Preview)
+      - name: 🚀 Deploy to Vercel (Preview)
         id: deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=workcontrol --branch=pr-${{ github.event.pull_request.number }}
+        run: |
+          PREVIEW_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          echo "✅ Preview URL: $PREVIEW_URL"
 
       - name: 💬 Comment Preview URL on PR
         uses: actions/github-script@v7
@@ -70,14 +76,14 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const url = '${{ steps.deploy.outputs.url }}' || 'Deploy failed';
-            const body = `## 🚀 Preview Deploy\n\n` +
-              `| Property | Value |\n` +
-              `|----------|-------|\n` +
+            const url = '${{ steps.deploy.outputs.preview_url }}' || 'Deploy falhou';
+            const body = `## 🚀 Preview Deploy (Vercel)\n\n` +
+              `| Propriedade | Valor |\n` +
+              `|-------------|-------|\n` +
               `| 🔗 URL | [${url}](${url}) |\n` +
               `| 📦 Commit | \`${{ github.sha }}\` |\n` +
               `| 🌿 Branch | \`${{ github.head_ref }}\` |\n\n` +
-              `> ⚡ Preview updates automatically on new commits.`;
+              `> ⚡ Preview atualizado automaticamente a cada novo commit.`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -86,7 +92,7 @@ jobs:
             });
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 2: E2E Smoke Tests on Preview
+  # JOB 2: E2E Smoke Tests no Preview
   # ─────────────────────────────────────────────────────────────
   e2e-preview:
     name: 🎭 E2E Smoke Tests (Preview)
@@ -111,7 +117,7 @@ jobs:
       - name: 🎭 Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: 🧪 Run Playwright E2E smoke tests
+      - name: 🧪 Run Playwright smoke tests
         run: npm run test:e2e -- --grep @smoke
         env:
           PLAYWRIGHT_BASE_URL: ${{ needs.preview.outputs.preview_url }}
@@ -128,18 +134,18 @@ jobs:
           retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 3: Production Deploy (main branch only)
+  # JOB 3: Production Deploy (push para main)
   # ─────────────────────────────────────────────────────────────
   production:
-    name: 🏭 Production Deploy
+    name: 🏭 Production Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: production
-      url: https://workcontrol.pages.dev
+      url: ${{ steps.deploy.outputs.production_url }}
     outputs:
-      deploy_url: https://workcontrol.pages.dev
+      production_url: ${{ steps.deploy.outputs.production_url }}
 
     steps:
       - name: 📥 Checkout
@@ -156,20 +162,25 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
 
-      - name: 🏗️ Build (production)
-        run: npm run build
+      - name: 📦 Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: 🔗 Pull Vercel environment (production)
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: 🏗️ Build project (production)
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: 🚀 Deploy to Cloudflare Pages (Production)
+      - name: 🚀 Deploy to Vercel (Production)
         id: deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=workcontrol --branch=main
+        run: |
+          PROD_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production_url=$PROD_URL" >> $GITHUB_OUTPUT
+          echo "✅ Production URL: $PROD_URL"
 
       - name: 🏷️ Create Release Tag
         uses: actions/github-script@v7
@@ -186,10 +197,19 @@ jobs:
                 ref: `refs/tags/${tagName}`,
                 sha: context.sha
               });
-              console.log(`✅ Created tag: ${tagName}`);
+              console.log(`✅ Tag criada: ${tagName}`);
             } catch (e) {
-              console.log(`⚠️ Tag creation skipped: ${e.message}`);
+              console.log(`⚠️ Tag skipped: ${e.message}`);
             }
+
+      - name: 📊 Deploy summary
+        run: |
+          echo "## 🚀 Production Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 URL | ${{ steps.deploy.outputs.production_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 👤 Author | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────────────────────────
   # JOB 4: E2E Production Smoke Tests
@@ -217,13 +237,13 @@ jobs:
       - name: 🎭 Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: ⏱️ Wait for deployment propagation
-        run: sleep 30
+      - name: ⏱️ Aguardar propagação do deploy
+        run: sleep 15
 
       - name: 🧪 Run production smoke tests
         run: npm run test:e2e -- --grep @smoke
         env:
-          PLAYWRIGHT_BASE_URL: https://workcontrol.pages.dev
+          PLAYWRIGHT_BASE_URL: ${{ needs.production.outputs.production_url }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
         continue-on-error: true
@@ -237,7 +257,7 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 5: Lighthouse CI Performance Audit
+  # JOB 5: Lighthouse CI
   # ─────────────────────────────────────────────────────────────
   lighthouse:
     name: 🏠 Lighthouse CI
@@ -258,7 +278,7 @@ jobs:
       - name: 🏠 Run Lighthouse CI
         run: |
           npx --yes @lhci/cli@0.14.x autorun \
-            --collect.url=https://workcontrol.pages.dev \
+            --collect.url=${{ needs.production.outputs.production_url }} \
             --assert.preset=lighthouse:no-pwa \
             --assert.assertions.performance=">=0.70" \
             --assert.assertions.accessibility=">=0.85" \
@@ -268,16 +288,16 @@ jobs:
         continue-on-error: true
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 6: Notify Slack on Production Deploy
+  # JOB 6: Notificação Slack
   # ─────────────────────────────────────────────────────────────
   notify:
-    name: 📢 Notify Deployment
+    name: 📢 Notificar Deploy
     runs-on: ubuntu-latest
     needs: [production, e2e-production]
     if: always() && github.ref == 'refs/heads/main'
 
     steps:
-      - name: 📢 Notify Slack
+      - name: 📢 Slack notification
         uses: slackapi/slack-github-action@v1.26.0
         if: env.SLACK_WEBHOOK_URL != ''
         env:
@@ -291,7 +311,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ needs.production.result == 'success' && '✅ *Production Deploy SUCCESS*' || '❌ *Production Deploy FAILED*' }}\n*Repo:* ${{ github.repository }}\n*Commit:* `${{ github.sha }}`\n*Author:* ${{ github.actor }}\n*URL:* https://workcontrol.pages.dev"
+                    "text": "${{ needs.production.result == 'success' && '✅ *Deploy Vercel — SUCESSO*' || '❌ *Deploy Vercel — FALHOU*' }}\n*Projeto:* ${{ github.repository }}\n*Commit:* `${{ github.sha }}`\n*Autor:* ${{ github.actor }}\n*URL:* ${{ needs.production.outputs.production_url }}"
                   }
                 }
               ]
