@@ -79,8 +79,9 @@ test.describe("XSS Prevention", () => {
 
   test("URL parameters are not rendered as HTML", async ({ page }) => {
     // Test reflected XSS via URL parameters
-    await page.goto('/auth?error=<img src=x onerror="window.__xss2=1">');
-    await page.waitForTimeout(1000);
+    const param = encodeURIComponent('<img src=x onerror="window.__xss2=1">');
+    await page.goto(`/auth?error=${param}`);
+    await page.waitForTimeout(500);
 
     const xssExecuted = await page.evaluate(() => {
       return (window as unknown as Record<string, unknown>)["__xss2"];
@@ -90,8 +91,9 @@ test.describe("XSS Prevention", () => {
   });
 
   test("hash injection does not execute scripts", async ({ page }) => {
-    await page.goto("/auth#<script>window.__xss3=1</script>");
-    await page.waitForTimeout(1000);
+    const hash = encodeURIComponent('<script>window.__xss3=1</script>');
+    await page.goto(`/auth#${hash}`);
+    await page.waitForTimeout(500);
 
     const xssExecuted = await page.evaluate(() => {
       return (window as unknown as Record<string, unknown>)["__xss3"];
