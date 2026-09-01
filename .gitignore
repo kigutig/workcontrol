@@ -39,3 +39,6 @@ dist-ssr
 coverage/
 playwright-report/
 test-results/
+
+.vercel
+.env*

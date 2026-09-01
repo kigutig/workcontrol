@@ -67,7 +67,10 @@ export const Route = createFileRoute("/_authenticated/all-tasks")({
   head: () => ({
     meta: [
       { title: "Todas as Tarefas — FitControl" },
-      { name: "description", content: "Listagem completa, filtros e pesquisa global de tarefas da oficina." },
+      {
+        name: "description",
+        content: "Listagem completa, filtros e pesquisa global de tarefas da oficina.",
+      },
     ],
   }),
   component: AllTasksPage,
@@ -125,14 +128,24 @@ function AllTasksPage() {
 
   // Status Change Mutation
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status, currentStartedAt, intervals }: { id: string; status: Status; currentStartedAt?: string | null; intervals?: any[] }) => {
+    mutationFn: async ({
+      id,
+      status,
+      currentStartedAt,
+      intervals,
+    }: {
+      id: string;
+      status: Status;
+      currentStartedAt?: string | null;
+      intervals?: any[];
+    }) => {
       const patch: Record<string, unknown> = { status };
       if (status === "done") {
         patch.completed_at = new Date().toISOString();
       } else {
         patch.completed_at = null;
       }
-      
+
       if (status !== "pending" && !currentStartedAt) {
         patch.started_at = new Date().toISOString();
       } else if (status === "pending") {
@@ -143,7 +156,10 @@ function AllTasksPage() {
         patch.intervals = intervals;
       }
 
-      const { error } = await supabase.from("tasks").update(patch as never).eq("id", id);
+      const { error } = await supabase
+        .from("tasks")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -197,7 +213,7 @@ function AllTasksPage() {
     const resolvedMachineId = await resolveOrCreateMachine(
       createMachineId,
       createMachineCode,
-      createMachineName
+      createMachineName,
     );
 
     create.mutate({
@@ -222,7 +238,8 @@ function AllTasksPage() {
         !q ||
         t.title.toLowerCase().includes(q) ||
         (t.description && t.description.toLowerCase().includes(q)) ||
-        (machine && (machine.code.toLowerCase().includes(q) || machine.name.toLowerCase().includes(q))) ||
+        (machine &&
+          (machine.code.toLowerCase().includes(q) || machine.name.toLowerCase().includes(q))) ||
         (assignee && assignee.name.toLowerCase().includes(q));
 
       const matchesStatus = statusFilter === "all" || t.status === statusFilter;
@@ -234,7 +251,16 @@ function AllTasksPage() {
 
       return matchesSearch && matchesStatus && matchesAssignee && matchesType && matchesPriority;
     });
-  }, [tasks, search, statusFilter, assigneeFilter, typeFilter, priorityFilter, profilesMap, machinesMap]);
+  }, [
+    tasks,
+    search,
+    statusFilter,
+    assigneeFilter,
+    typeFilter,
+    priorityFilter,
+    profilesMap,
+    machinesMap,
+  ]);
 
   // Counts
   const countPending = tasks.filter((t) => t.status === "pending").length;
@@ -315,20 +341,20 @@ function AllTasksPage() {
                   </Select>
                 </div>
 
-              {/* Campos de Nome e Código da Máquina (Selecionar ou Digitar) */}
-              <div className="rounded-xl border border-border/60 p-3 bg-surface-elevated">
-                <MachineFormFields
-                  machines={machines}
-                  machineId={createMachineId}
-                  machineName={createMachineName}
-                  machineCode={createMachineCode}
-                  onChange={(val) => {
-                    setCreateMachineId(val.machineId);
-                    setCreateMachineName(val.machineName);
-                    setCreateMachineCode(val.machineCode);
-                  }}
-                />
-              </div>
+                {/* Campos de Nome e Código da Máquina (Selecionar ou Digitar) */}
+                <div className="rounded-xl border border-border/60 p-3 bg-surface-elevated">
+                  <MachineFormFields
+                    machines={machines}
+                    machineId={createMachineId}
+                    machineName={createMachineName}
+                    machineCode={createMachineCode}
+                    onChange={(val) => {
+                      setCreateMachineId(val.machineId);
+                      setCreateMachineName(val.machineName);
+                      setCreateMachineCode(val.machineCode);
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -339,7 +365,11 @@ function AllTasksPage() {
                 <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={create.isPending} className="bg-gradient-ember shadow-ember">
+                <Button
+                  type="submit"
+                  disabled={create.isPending}
+                  className="bg-gradient-ember shadow-ember"
+                >
                   {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Tarefa"}
                 </Button>
               </DialogFooter>
@@ -351,28 +381,38 @@ function AllTasksPage() {
       {/* Metric Badges Summary */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 mb-6">
         <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
-          <div className="text-[10px] uppercase font-bold text-muted-foreground">Total de Tarefas</div>
+          <div className="text-[10px] uppercase font-bold text-muted-foreground">
+            Total de Tarefas
+          </div>
           <div className="mt-1 font-display text-2xl font-bold tabular-nums">{tasks.length}</div>
         </div>
 
         <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
           <div className="text-[10px] uppercase font-bold text-muted-foreground">Pendentes</div>
-          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-muted-foreground">{countPending}</div>
+          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-muted-foreground">
+            {countPending}
+          </div>
         </div>
 
         <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
           <div className="text-[10px] uppercase font-bold text-info">Em Andamento</div>
-          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-info">{countProgress}</div>
+          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-info">
+            {countProgress}
+          </div>
         </div>
 
         <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
           <div className="text-[10px] uppercase font-bold text-warning">Revisão</div>
-          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-warning">{countReview}</div>
+          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-warning">
+            {countReview}
+          </div>
         </div>
 
         <div className="rounded-xl border border-border/60 bg-card p-4 shadow-card">
           <div className="text-[10px] uppercase font-bold text-success">Concluídas</div>
-          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-success">{countDone}</div>
+          <div className="mt-1 font-display text-2xl font-bold tabular-nums text-success">
+            {countDone}
+          </div>
         </div>
       </div>
 
@@ -455,7 +495,9 @@ function AllTasksPage() {
               onClick={() => setViewMode("table")}
               className={cn(
                 "p-1.5 rounded-md text-xs transition",
-                viewMode === "table" ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                viewMode === "table"
+                  ? "bg-accent text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
               )}
               title="Visualização em Tabela"
             >
@@ -465,7 +507,9 @@ function AllTasksPage() {
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-1.5 rounded-md text-xs transition",
-                viewMode === "grid" ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                viewMode === "grid"
+                  ? "bg-accent text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
               )}
               title="Visualização em Cards"
             >
@@ -525,20 +569,34 @@ function AllTasksPage() {
                           {typeIcon(t.type)}
                         </span>
                         <div className="min-w-0">
-                          <div className="truncate font-display font-bold text-foreground">{t.title}</div>
-                          <span className="text-xs text-muted-foreground font-normal">{t.type}</span>
+                          <div className="truncate font-display font-bold text-foreground">
+                            {t.title}
+                          </div>
+                          <span className="text-xs text-muted-foreground font-normal">
+                            {t.type}
+                          </span>
                         </div>
                       </div>
                     </td>
 
                     <td className="p-4">
-                      <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border", st?.tone)}>
+                      <span
+                        className={cn(
+                          "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
+                          st?.tone,
+                        )}
+                      >
                         {st?.label}
                       </span>
                     </td>
 
                     <td className="p-4">
-                      <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border", priorityTone(t.priority))}>
+                      <span
+                        className={cn(
+                          "inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border",
+                          priorityTone(t.priority),
+                        )}
+                      >
                         {t.priority}
                       </span>
                     </td>
@@ -607,7 +665,7 @@ function AllTasksPage() {
                               disabled={t.status === s.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                
+
                                 const newIntervals = [...((t.intervals as any[]) || [])];
                                 if (s.id === "paused" && t.status === "progress") {
                                   newIntervals.push({
@@ -616,14 +674,20 @@ function AllTasksPage() {
                                     reason: "Alterado na Lista",
                                   });
                                 } else if (s.id === "progress" && t.status === "paused") {
-                                  if (newIntervals.length > 0 && !newIntervals[newIntervals.length - 1].resumed_at) {
+                                  if (
+                                    newIntervals.length > 0 &&
+                                    !newIntervals[newIntervals.length - 1].resumed_at
+                                  ) {
                                     newIntervals[newIntervals.length - 1] = {
                                       ...newIntervals[newIntervals.length - 1],
                                       resumed_at: new Date().toISOString(),
                                     };
                                   }
                                 } else if (s.id === "done" && t.status === "paused") {
-                                  if (newIntervals.length > 0 && !newIntervals[newIntervals.length - 1].resumed_at) {
+                                  if (
+                                    newIntervals.length > 0 &&
+                                    !newIntervals[newIntervals.length - 1].resumed_at
+                                  ) {
                                     newIntervals[newIntervals.length - 1] = {
                                       ...newIntervals[newIntervals.length - 1],
                                       resumed_at: new Date().toISOString(),
@@ -631,11 +695,18 @@ function AllTasksPage() {
                                   }
                                 }
 
-                                updateStatus.mutate({ id: t.id, status: s.id, currentStartedAt: t.started_at, intervals: newIntervals });
+                                updateStatus.mutate({
+                                  id: t.id,
+                                  status: s.id,
+                                  currentStartedAt: t.started_at,
+                                  intervals: newIntervals,
+                                });
                               }}
                               className="text-xs"
                             >
-                              <span className={cn("h-2 w-2 rounded-full mr-2", s.tone.split(" ")[0])} />
+                              <span
+                                className={cn("h-2 w-2 rounded-full mr-2", s.tone.split(" ")[0])}
+                              />
                               Mover para {s.label}
                             </DropdownMenuItem>
                           ))}
@@ -685,21 +756,39 @@ function AllTasksPage() {
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border", priorityTone(t.priority))}>
+                    <span
+                      className={cn(
+                        "inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border",
+                        priorityTone(t.priority),
+                      )}
+                    >
                       {t.priority}
                     </span>
-                    <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border", st?.tone)}>
+                    <span
+                      className={cn(
+                        "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
+                        st?.tone,
+                      )}
+                    >
                       {st?.label}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">{typeIcon(t.type)}</span>
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.type}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t.type}
+                    </span>
                   </div>
 
-                  <h3 className="font-display font-bold text-lg text-foreground leading-snug">{t.title}</h3>
-                  {t.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>}
+                  <h3 className="font-display font-bold text-lg text-foreground leading-snug">
+                    {t.title}
+                  </h3>
+                  {t.description && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {t.description}
+                    </p>
+                  )}
 
                   {photos.length > 0 && (
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-warning font-semibold">
@@ -740,11 +829,7 @@ function AllTasksPage() {
       </div>
 
       {/* Modal de Detalhes da Tarefa */}
-      <TaskDetailModal
-        task={selectedTask}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
+      <TaskDetailModal task={selectedTask} open={detailOpen} onOpenChange={setDetailOpen} />
     </AppShell>
   );
 }

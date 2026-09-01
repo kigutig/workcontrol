@@ -19,12 +19,7 @@ export const MAX_LENGTH = {
 } as const;
 
 /** Allowed file types for uploads */
-export const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-] as const;
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 
 /** Max upload size: 5 MB */
 export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -37,24 +32,26 @@ export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
  */
 export function sanitizeText(input: unknown): string {
   if (typeof input !== "string") return "";
-  return input
-    .trim()
-    // Remove dangerous tag content (script, style, iframe, etc.) including inner content
-    .replace(/<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi, "")
-    // Strip remaining HTML tags (self-closing and open/close)
-    .replace(/<[^>]*>/g, "")
-    .replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
-      // Re-encode HTML entities
-      const entities: Record<string, string> = {
-        "&amp;": "&",
-        "&lt;": "<",
-        "&gt;": ">",
-        "&quot;": '"',
-        "&#x27;": "'",
-        "&#39;": "'",
-      };
-      return entities[match] ?? match;
-    });
+  return (
+    input
+      .trim()
+      // Remove dangerous tag content (script, style, iframe, etc.) including inner content
+      .replace(/<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi, "")
+      // Strip remaining HTML tags (self-closing and open/close)
+      .replace(/<[^>]*>/g, "")
+      .replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
+        // Re-encode HTML entities
+        const entities: Record<string, string> = {
+          "&amp;": "&",
+          "&lt;": "<",
+          "&gt;": ">",
+          "&quot;": '"',
+          "&#x27;": "'",
+          "&#39;": "'",
+        };
+        return entities[match] ?? match;
+      })
+  );
 }
 
 /**
@@ -68,10 +65,7 @@ export function truncate(input: string, maxLength: number): string {
 /**
  * Sanitize and truncate user text input.
  */
-export function sanitizeAndTruncate(
-  input: unknown,
-  maxLength: number = MAX_LENGTH.text,
-): string {
+export function sanitizeAndTruncate(input: unknown, maxLength: number = MAX_LENGTH.text): string {
   return truncate(sanitizeText(input), maxLength);
 }
 
@@ -91,8 +85,7 @@ export function isValidEmail(email: string): boolean {
 export function isValidUUID(uuid: string): boolean {
   // Matches UUID v4: third segment MUST start with '4'
   // and fourth segment MUST start with 8, 9, a, or b
-  const uuidV4Regex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidV4Regex.test(uuid);
 }
 
@@ -159,11 +152,7 @@ const rateLimitStore = new Map<string, number[]>();
  * @param maxRequests - Max allowed requests in the window
  * @param windowMs - Time window in milliseconds
  */
-export function isRateLimited(
-  key: string,
-  maxRequests: number,
-  windowMs: number,
-): boolean {
+export function isRateLimited(key: string, maxRequests: number, windowMs: number): boolean {
   const now = Date.now();
   const timestamps = rateLimitStore.get(key) ?? [];
 

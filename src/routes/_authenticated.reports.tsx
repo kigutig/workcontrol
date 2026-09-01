@@ -4,7 +4,14 @@ import { useState, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { STATUS, TASK_TYPES, typeIcon, priorityTone, parsePhotoUrls, calculateTaskTimings as calculateGlobalTaskTimings } from "@/lib/task-utils";
+import {
+  STATUS,
+  TASK_TYPES,
+  typeIcon,
+  priorityTone,
+  parsePhotoUrls,
+  calculateTaskTimings as calculateGlobalTaskTimings,
+} from "@/lib/task-utils";
 import {
   BarChart3,
   Calendar,
@@ -27,7 +34,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -51,7 +64,11 @@ export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Relatórios Gerenciais — FitControl" },
-      { name: "description", content: "Geração de relatórios operacionais de funcionários, tarefas, máquinas e desempenho." },
+      {
+        name: "description",
+        content:
+          "Geração de relatórios operacionais de funcionários, tarefas, máquinas e desempenho.",
+      },
     ],
   }),
   component: ReportsPage,
@@ -84,7 +101,7 @@ function ReportsPage() {
   // Filters State
   const [datePreset, setDatePreset] = useState<string>("7d");
   const [startDate, setStartDate] = useState<string>(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [selectedAssignee, setSelectedAssignee] = useState<string>("all");
@@ -188,14 +205,15 @@ function ReportsPage() {
 
         // --- 1. EMPLOYEE PERFORMANCE ---
         const employeeMap: Record<string, any> = {};
-        
+
         filtered.forEach((t) => {
           const assigneeId = t.assignee_id || "unassigned";
           if (!employeeMap[assigneeId]) {
             const prof = profilesMap.get(assigneeId);
             employeeMap[assigneeId] = {
               id: assigneeId,
-              name: prof?.name || (assigneeId === "unassigned" ? "Sem Responsável" : "Desconhecido"),
+              name:
+                prof?.name || (assigneeId === "unassigned" ? "Sem Responsável" : "Desconhecido"),
               badge: prof?.badge || "-",
               total: 0,
               completed: 0,
@@ -217,8 +235,7 @@ function ReportsPage() {
             if (t.priority === "Urgente" || t.priority === "Alta") {
               record.urgentCompleted += 1;
             }
-          }
-          else if (t.status === "progress") record.progress += 1;
+          } else if (t.status === "progress") record.progress += 1;
           else if (t.status === "paused") record.paused += 1;
           else if (t.status === "review") record.review += 1;
           else if (t.status === "pending") record.pending += 1;
@@ -226,30 +243,41 @@ function ReportsPage() {
           const timings = calculateTaskTimings(t);
           record.activeMs += timings.activeMs;
           record.pausedMs += timings.pausedMs;
-          
+
           const taskIntervals = Array.isArray(t.intervals) ? t.intervals : [];
           record.pauseCount += taskIntervals.length;
         });
 
-        const desempenhoData = Object.values(employeeMap).map((emp: any) => {
-          const pct = emp.total > 0 ? Math.round((emp.completed / emp.total) * 100) : 0;
-          const avgActiveMs = emp.completed > 0 ? Math.round(emp.activeMs / emp.completed) : 0;
-          return {
-            ...emp,
-            completionRate: pct,
-            activeHrsText: formatHrsMin(emp.activeMs),
-            pausedHrsText: formatHrsMin(emp.pausedMs),
-            avgActiveHrsText: formatHrsMin(avgActiveMs),
-            activeHoursNum: Math.round((emp.activeMs / 3600000) * 10) / 10,
-            pausedHoursNum: Math.round((emp.pausedMs / 3600000) * 10) / 10,
-          };
-        }).sort((a, b) => b.completed - a.completed);
+        const desempenhoData = Object.values(employeeMap)
+          .map((emp: any) => {
+            const pct = emp.total > 0 ? Math.round((emp.completed / emp.total) * 100) : 0;
+            const avgActiveMs = emp.completed > 0 ? Math.round(emp.activeMs / emp.completed) : 0;
+            return {
+              ...emp,
+              completionRate: pct,
+              activeHrsText: formatHrsMin(emp.activeMs),
+              pausedHrsText: formatHrsMin(emp.pausedMs),
+              avgActiveHrsText: formatHrsMin(avgActiveMs),
+              activeHoursNum: Math.round((emp.activeMs / 3600000) * 10) / 10,
+              pausedHoursNum: Math.round((emp.pausedMs / 3600000) * 10) / 10,
+            };
+          })
+          .sort((a, b) => b.completed - a.completed);
 
         const totalCompletedDesempenho = filtered.filter((t) => t.status === "done").length;
-        const totalActiveTimeDesempenho = filtered.reduce((acc, t) => acc + calculateTaskTimings(t).activeMs, 0);
+        const totalActiveTimeDesempenho = filtered.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).activeMs,
+          0,
+        );
         const totalPausesDesempenho = desempenhoData.reduce((acc, emp) => acc + emp.pauseCount, 0);
-        const avgActiveTimePerTaskDesempenho = totalCompletedDesempenho > 0 ? Math.round(totalActiveTimeDesempenho / totalCompletedDesempenho) : 0;
-        const topEmployee = desempenhoData.length > 0 && desempenhoData[0].id !== "unassigned" ? desempenhoData[0].name : "Nenhum";
+        const avgActiveTimePerTaskDesempenho =
+          totalCompletedDesempenho > 0
+            ? Math.round(totalActiveTimeDesempenho / totalCompletedDesempenho)
+            : 0;
+        const topEmployee =
+          desempenhoData.length > 0 && desempenhoData[0].id !== "unassigned"
+            ? desempenhoData[0].name
+            : "Nenhum";
 
         const desempenhoSummary = {
           totalTasks: filtered.length,
@@ -293,37 +321,63 @@ function ReportsPage() {
         const totalPending = filtered.filter((t) => t.status === "pending").length;
 
         const completedTasks = filtered.filter((t) => t.status === "done");
-        const totalCompletedActiveMs = completedTasks.reduce((acc, t) => acc + calculateTaskTimings(t).activeMs, 0);
-        const totalCompletedPausedMs = completedTasks.reduce((acc, t) => acc + calculateTaskTimings(t).pausedMs, 0);
-        
-        const avgCompletedActiveText = completedTasks.length > 0 ? formatHrsMin(totalCompletedActiveMs / completedTasks.length) : "0m";
-        const avgCompletedPausedText = completedTasks.length > 0 ? formatHrsMin(totalCompletedPausedMs / completedTasks.length) : "0m";
+        const totalCompletedActiveMs = completedTasks.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).activeMs,
+          0,
+        );
+        const totalCompletedPausedMs = completedTasks.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).pausedMs,
+          0,
+        );
+
+        const avgCompletedActiveText =
+          completedTasks.length > 0
+            ? formatHrsMin(totalCompletedActiveMs / completedTasks.length)
+            : "0m";
+        const avgCompletedPausedText =
+          completedTasks.length > 0
+            ? formatHrsMin(totalCompletedPausedMs / completedTasks.length)
+            : "0m";
 
         // Timeline: Tasks created per day
         const timelineMap: Record<string, number> = {};
         filtered.forEach((t) => {
-          const dateStr = new Date(t.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+          const dateStr = new Date(t.created_at).toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+          });
           timelineMap[dateStr] = (timelineMap[dateStr] || 0) + 1;
         });
-        const tasksTimelineData = Object.entries(timelineMap).map(([date, count]) => ({
-          date,
-          "Tarefas Criadas": count,
-        })).sort((a, b) => {
-          const [da, ma] = a.date.split("/").map(Number);
-          const [db, mb] = b.date.split("/").map(Number);
-          return ma !== mb ? ma - mb : da - db;
-        });
+        const tasksTimelineData = Object.entries(timelineMap)
+          .map(([date, count]) => ({
+            date,
+            "Tarefas Criadas": count,
+          }))
+          .sort((a, b) => {
+            const [da, ma] = a.date.split("/").map(Number);
+            const [db, mb] = b.date.split("/").map(Number);
+            return ma !== mb ? ma - mb : da - db;
+          });
 
         // Tasks by priority chart data
         const priorityCount: Record<string, number> = {};
         filtered.forEach((t) => {
           priorityCount[t.priority] = (priorityCount[t.priority] || 0) + 1;
         });
-        const priorityChartData = ["Urgente", "Alta", "Normal", "Baixa"].map((p) => ({
-          name: p,
-          value: priorityCount[p] || 0,
-          color: p === "Urgente" ? "#ef4444" : p === "Alta" ? "#f97316" : p === "Normal" ? "#3b82f6" : "#64748b",
-        })).filter((p) => p.value > 0);
+        const priorityChartData = ["Urgente", "Alta", "Normal", "Baixa"]
+          .map((p) => ({
+            name: p,
+            value: priorityCount[p] || 0,
+            color:
+              p === "Urgente"
+                ? "#ef4444"
+                : p === "Alta"
+                  ? "#f97316"
+                  : p === "Normal"
+                    ? "#3b82f6"
+                    : "#64748b",
+          }))
+          .filter((p) => p.value > 0);
 
         const tarefasSummary = {
           totalTasks: filtered.length,
@@ -365,16 +419,25 @@ function ReportsPage() {
           record.activeMs += timings.activeMs;
         });
 
-        const maquinasData = Object.values(machineMap).map((m: any) => ({
-          ...m,
-          assigneesCount: m.uniqueAssignees.size,
-          activeHrsText: formatHrsMin(m.activeMs),
-          activeHrsNum: Math.round((m.activeMs / 3600000) * 10) / 10,
-        })).sort((a, b) => b.total - a.total);
+        const maquinasData = Object.values(machineMap)
+          .map((m: any) => ({
+            ...m,
+            assigneesCount: m.uniqueAssignees.size,
+            activeHrsText: formatHrsMin(m.activeMs),
+            activeHrsNum: Math.round((m.activeMs / 3600000) * 10) / 10,
+          }))
+          .sort((a, b) => b.total - a.total);
 
-        const totalActiveTimeMaquinas = filtered.reduce((acc, t) => acc + calculateTaskTimings(t).activeMs, 0);
-        const topMachine = maquinasData.length > 0 && maquinasData[0].id !== "none" ? maquinasData[0].code : "Nenhum";
-        const avgActiveTimePerService = filtered.length > 0 ? Math.round(totalActiveTimeMaquinas / filtered.length) : 0;
+        const totalActiveTimeMaquinas = filtered.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).activeMs,
+          0,
+        );
+        const topMachine =
+          maquinasData.length > 0 && maquinasData[0].id !== "none"
+            ? maquinasData[0].code
+            : "Nenhum";
+        const avgActiveTimePerService =
+          filtered.length > 0 ? Math.round(totalActiveTimeMaquinas / filtered.length) : 0;
 
         const maquinasSummary = {
           totalMachines: maquinasData.length,
@@ -385,7 +448,13 @@ function ReportsPage() {
         };
 
         // --- 4. GENERAL WORKSHOP SUMMARY ---
-        const statusCountGeral: Record<string, number> = { pending: 0, progress: 0, paused: 0, review: 0, done: 0 };
+        const statusCountGeral: Record<string, number> = {
+          pending: 0,
+          progress: 0,
+          paused: 0,
+          review: 0,
+          done: 0,
+        };
         const categoryCountGeral: Record<string, number> = {};
         const priorityCountGeral: Record<string, number> = {};
 
@@ -398,44 +467,79 @@ function ReportsPage() {
         const statusChart = STATUS.map((s) => ({
           name: s.label,
           value: statusCountGeral[s.id] || 0,
-          color: s.tone.includes("info") ? "#0ea5e9" : s.tone.includes("warning") ? "#f59e0b" : s.tone.includes("success") ? "#10b981" : s.tone.includes("purple") ? "#a855f7" : "#64748b",
+          color: s.tone.includes("info")
+            ? "#0ea5e9"
+            : s.tone.includes("warning")
+              ? "#f59e0b"
+              : s.tone.includes("success")
+                ? "#10b981"
+                : s.tone.includes("purple")
+                  ? "#a855f7"
+                  : "#64748b",
         })).filter((s) => s.value > 0);
 
-        const categoryChart = Object.entries(categoryCountGeral).map(([name, value]) => ({
-          name,
-          value,
-        })).sort((a, b) => b.value - a.value);
+        const categoryChart = Object.entries(categoryCountGeral)
+          .map(([name, value]) => ({
+            name,
+            value,
+          }))
+          .sort((a, b) => b.value - a.value);
 
-        const priorityChart = ["Urgente", "Alta", "Normal", "Baixa"].map((p) => ({
-          name: p,
-          value: priorityCountGeral[p] || 0,
-          color: p === "Urgente" ? "#ef4444" : p === "Alta" ? "#f97316" : p === "Normal" ? "#3b82f6" : "#64748b",
-        })).filter((p) => p.value > 0);
+        const priorityChart = ["Urgente", "Alta", "Normal", "Baixa"]
+          .map((p) => ({
+            name: p,
+            value: priorityCountGeral[p] || 0,
+            color:
+              p === "Urgente"
+                ? "#ef4444"
+                : p === "Alta"
+                  ? "#f97316"
+                  : p === "Normal"
+                    ? "#3b82f6"
+                    : "#64748b",
+          }))
+          .filter((p) => p.value > 0);
 
         const totalCompletedGeral = statusCountGeral.done || 0;
-        const completionRate = filtered.length > 0 ? Math.round((totalCompletedGeral / filtered.length) * 100) : 0;
+        const completionRate =
+          filtered.length > 0 ? Math.round((totalCompletedGeral / filtered.length) * 100) : 0;
 
-        const totalActiveTimeGeral = filtered.reduce((acc, t) => acc + calculateTaskTimings(t).activeMs, 0);
-        const totalPausedTimeGeral = filtered.reduce((acc, t) => acc + calculateTaskTimings(t).pausedMs, 0);
-        const totalPausesCountGeral = filtered.reduce((acc, t) => acc + (Array.isArray(t.intervals) ? t.intervals.length : 0), 0);
-        const avgPausesPerTaskGeral = filtered.length > 0 ? Math.round((totalPausesCountGeral / filtered.length) * 10) / 10 : 0;
+        const totalActiveTimeGeral = filtered.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).activeMs,
+          0,
+        );
+        const totalPausedTimeGeral = filtered.reduce(
+          (acc, t) => acc + calculateTaskTimings(t).pausedMs,
+          0,
+        );
+        const totalPausesCountGeral = filtered.reduce(
+          (acc, t) => acc + (Array.isArray(t.intervals) ? t.intervals.length : 0),
+          0,
+        );
+        const avgPausesPerTaskGeral =
+          filtered.length > 0 ? Math.round((totalPausesCountGeral / filtered.length) * 10) / 10 : 0;
 
         // Daily completed timeline
         const completedTimelineMap: Record<string, number> = {};
         filtered.forEach((t) => {
           if (t.status === "done" && t.completed_at) {
-            const dateStr = new Date(t.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+            const dateStr = new Date(t.completed_at).toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "2-digit",
+            });
             completedTimelineMap[dateStr] = (completedTimelineMap[dateStr] || 0) + 1;
           }
         });
-        const dailyCompletedTimeline = Object.entries(completedTimelineMap).map(([date, count]) => ({
-          date,
-          "Tarefas Concluídas": count,
-        })).sort((a, b) => {
-          const [da, ma] = a.date.split("/").map(Number);
-          const [db, mb] = b.date.split("/").map(Number);
-          return ma !== mb ? ma - mb : da - db;
-        });
+        const dailyCompletedTimeline = Object.entries(completedTimelineMap)
+          .map(([date, count]) => ({
+            date,
+            "Tarefas Concluídas": count,
+          }))
+          .sort((a, b) => {
+            const [da, ma] = a.date.split("/").map(Number);
+            const [db, mb] = b.date.split("/").map(Number);
+            return ma !== mb ? ma - mb : da - db;
+          });
 
         const geralSummary = {
           statusChart,
@@ -480,7 +584,20 @@ function ReportsPage() {
 
     if (type === "desempenho") {
       const data = generatedReport.desempenho.data;
-      headers = ["Funcionário", "Crachá", "Total de Tarefas", "Concluídas", "Em Andamento", "Pausadas", "Em Revisão", "Pendentes", "Taxa de Conclusão", "Tempo Ativo", "Qtd. Pausas", "Tempo Pausado"];
+      headers = [
+        "Funcionário",
+        "Crachá",
+        "Total de Tarefas",
+        "Concluídas",
+        "Em Andamento",
+        "Pausadas",
+        "Em Revisão",
+        "Pendentes",
+        "Taxa de Conclusão",
+        "Tempo Ativo",
+        "Qtd. Pausas",
+        "Tempo Pausado",
+      ];
       rows = data.map((d) => [
         d.name,
         d.badge,
@@ -509,7 +626,7 @@ function ReportsPage() {
         "Concluída em",
         "Tempo Ativo",
         "Qtd. Pausas",
-        "Tempo Pausado"
+        "Tempo Pausado",
       ];
       rows = data.map((d) => [
         d.title,
@@ -527,7 +644,14 @@ function ReportsPage() {
       ]);
     } else if (type === "maquinas") {
       const data = generatedReport.maquinas.data;
-      headers = ["Máquina (Código)", "Nome do Equipamento", "Total de Tarefas", "Concluídas", "Funcionários Únicos", "Tempo Ativo Registrado"];
+      headers = [
+        "Máquina (Código)",
+        "Nome do Equipamento",
+        "Total de Tarefas",
+        "Concluídas",
+        "Funcionários Únicos",
+        "Tempo Ativo Registrado",
+      ];
       rows = data.map((d) => [
         d.code,
         d.name,
@@ -538,7 +662,17 @@ function ReportsPage() {
       ]);
     } else if (type === "geral") {
       const data = generatedReport.tarefas.data;
-      headers = ["Título da Tarefa", "Categoria", "Status", "Prioridade", "Responsável", "Máquina", "Criada em", "Iniciada em", "Concluída em"];
+      headers = [
+        "Título da Tarefa",
+        "Categoria",
+        "Status",
+        "Prioridade",
+        "Responsável",
+        "Máquina",
+        "Criada em",
+        "Iniciada em",
+        "Concluída em",
+      ];
       rows = data.map((d) => [
         d.title,
         d.type,
@@ -577,7 +711,9 @@ function ReportsPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center text-muted-foreground p-4">
         <AlertTriangle className="h-10 w-10 text-destructive mb-3" />
         <h2 className="text-lg font-bold text-foreground mb-1">Acesso Restrito</h2>
-        <p className="text-sm mb-4 text-center">Você não tem permissão para visualizar relatórios.</p>
+        <p className="text-sm mb-4 text-center">
+          Você não tem permissão para visualizar relatórios.
+        </p>
         <Button asChild>
           <Link to="/">Voltar ao Início</Link>
         </Button>
@@ -591,7 +727,9 @@ function ReportsPage() {
       subtitle="Analise métricas da oficina, produtividade de funcionários e controle de máquinas."
     >
       {/* Inject print-only stylesheet dynamically to prevent truncation and scaling issues */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media print {
           /* Hide sidebar, headers, query selectors, action buttons and toaster popups */
           header, 
@@ -745,7 +883,9 @@ function ReportsPage() {
             margin: 0.5cm;
           }
         }
-      `}} />
+      `,
+        }}
+      />
       {/* FILTERS CONTAINER: Hidden when printing */}
       <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card space-y-6 print:hidden">
         <div className="flex items-center gap-2 pb-3 border-b border-border/40">
@@ -884,10 +1024,16 @@ function ReportsPage() {
           {/* Action buttons on generated report */}
           <div className="flex justify-between items-center bg-surface-elevated/40 border border-border/50 rounded-2xl p-4 shadow-card print:hidden">
             <div className="text-xs text-muted-foreground">
-              Relatórios gerados em: <span className="font-semibold text-foreground">{generatedReport.generatedAt}</span>
+              Relatórios gerados em:{" "}
+              <span className="font-semibold text-foreground">{generatedReport.generatedAt}</span>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 h-9 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrint}
+                className="gap-1.5 h-9 text-xs"
+              >
                 <Printer className="h-3.5 w-3.5" /> Imprimir Painel / PDF
               </Button>
             </div>
@@ -897,12 +1043,20 @@ function ReportsPage() {
           <div className="hidden print:block border-b-2 border-primary/50 pb-4 mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="font-display font-black text-2xl tracking-tight text-primary">FitControl — Oficina</h1>
-                <p className="text-xs text-muted-foreground">Painel Unificado de Relatórios Gerenciais</p>
+                <h1 className="font-display font-black text-2xl tracking-tight text-primary">
+                  FitControl — Oficina
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  Painel Unificado de Relatórios Gerenciais
+                </p>
               </div>
               <div className="text-right text-xs">
                 <div>Data de Emissão: {generatedReport.generatedAt}</div>
-                <div>Período: {new Date(generatedReport.startDate + "T00:00:00").toLocaleDateString("pt-BR")} a {new Date(generatedReport.endDate + "T23:59:59").toLocaleDateString("pt-BR")}</div>
+                <div>
+                  Período:{" "}
+                  {new Date(generatedReport.startDate + "T00:00:00").toLocaleDateString("pt-BR")} a{" "}
+                  {new Date(generatedReport.endDate + "T23:59:59").toLocaleDateString("pt-BR")}
+                </div>
               </div>
             </div>
           </div>
@@ -913,14 +1067,18 @@ function ReportsPage() {
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <div>
-                  <h3 className="font-display font-bold text-lg text-foreground">1. Resumo Geral da Oficina</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Métricas gerais consolidadas no período selecionado.</p>
+                  <h3 className="font-display font-bold text-lg text-foreground">
+                    1. Resumo Geral da Oficina
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    Métricas gerais consolidadas no período selecionado.
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleExportCSV("geral")} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportCSV("geral")}
                 className="gap-1.5 h-8 text-xs border-success/40 text-success hover:bg-success/10 print:hidden"
               >
                 <Download className="h-3 w-3" /> Exportar Dados Gerais
@@ -930,28 +1088,52 @@ function ReportsPage() {
             {/* General Summary KPIs */}
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Volume Total</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.geral.summary.totalTasks} tarefas</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Volume Total
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.geral.summary.totalTasks} tarefas
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Concluídas</div>
-                <div className="text-xl font-black text-success">{generatedReport.geral.summary.totalCompleted}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Concluídas
+                </div>
+                <div className="text-xl font-black text-success">
+                  {generatedReport.geral.summary.totalCompleted}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Resolução</div>
-                <div className="text-xl font-black text-info">{generatedReport.geral.summary.completionRate}%</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Resolução
+                </div>
+                <div className="text-xl font-black text-info">
+                  {generatedReport.geral.summary.completionRate}%
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Tempo Ativo</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.geral.summary.totalActiveTimeText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Tempo Ativo
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.geral.summary.totalActiveTimeText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Tempo Pausado</div>
-                <div className="text-xl font-black text-purple-400">{generatedReport.geral.summary.totalPausedTimeText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Tempo Pausado
+                </div>
+                <div className="text-xl font-black text-purple-400">
+                  {generatedReport.geral.summary.totalPausedTimeText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Pausas / Tarefa</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.geral.summary.avgPausesPerTask}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Pausas / Tarefa
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.geral.summary.avgPausesPerTask}
+                </div>
               </div>
             </div>
 
@@ -969,15 +1151,27 @@ function ReportsPage() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis dataKey="name" stroke="#888" fontSize={9} />
                         <YAxis stroke="#888" fontSize={10} allowDecimals={false} />
-                        <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
                         <Bar dataKey="value" name="Volume" fill="#f97316" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="value" position="top" style={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 'bold' }} />
+                          <LabelList
+                            dataKey="value"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 10, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-muted-foreground text-xs">Sem dados no período.</div>
+                  <div className="text-center py-16 text-muted-foreground text-xs">
+                    Sem dados no período.
+                  </div>
                 )}
               </div>
 
@@ -998,19 +1192,33 @@ function ReportsPage() {
                             paddingAngle={3}
                             dataKey="value"
                           >
-                            {generatedReport.geral.summary.priorityChart.map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
+                            {generatedReport.geral.summary.priorityChart.map(
+                              (entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ),
+                            )}
                           </Pie>
-                          <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#1e1e2e",
+                              borderColor: "#333",
+                              color: "#fff",
+                            }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="space-y-1.5 text-[11px] flex-1">
                       {generatedReport.geral.summary.priorityChart.map((p: any) => (
-                        <div key={p.name} className="flex items-center justify-between font-medium border-b border-border/30 pb-1">
+                        <div
+                          key={p.name}
+                          className="flex items-center justify-between font-medium border-b border-border/30 pb-1"
+                        >
                           <span className="flex items-center gap-1.5">
-                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                            <span
+                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: p.color }}
+                            />
                             {p.name}
                           </span>
                           <span className="text-foreground font-bold">{p.value}</span>
@@ -1019,11 +1227,11 @@ function ReportsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-muted-foreground text-xs">Sem dados no período.</div>
+                  <div className="text-center py-16 text-muted-foreground text-xs">
+                    Sem dados no período.
+                  </div>
                 )}
               </div>
-
-
             </div>
           </div>
 
@@ -1037,14 +1245,19 @@ function ReportsPage() {
               <div className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary animate-pulse" />
                 <div>
-                  <h3 className="font-display font-bold text-lg text-foreground">2. Histórico & Atividades Detalhadas</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Listagem completa das tarefas realizadas no período com início, conclusão e histórico de pausas.</p>
+                  <h3 className="font-display font-bold text-lg text-foreground">
+                    2. Histórico & Atividades Detalhadas
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    Listagem completa das tarefas realizadas no período com início, conclusão e
+                    histórico de pausas.
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleExportCSV("tarefas")} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportCSV("tarefas")}
                 className="gap-1.5 h-8 text-xs border-success/40 text-success hover:bg-success/10 print:hidden"
               >
                 <Download className="h-3 w-3" /> Exportar Atividades (CSV)
@@ -1054,36 +1267,64 @@ function ReportsPage() {
             {/* Summary KPIs inside Tasks section */}
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Filtrado</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.tarefas.summary.totalTasks}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Total Filtrado
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.tarefas.summary.totalTasks}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Concluídas</div>
-                <div className="text-xl font-black text-success">{generatedReport.tarefas.summary.totalCompleted}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Concluídas
+                </div>
+                <div className="text-xl font-black text-success">
+                  {generatedReport.tarefas.summary.totalCompleted}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Em Execução</div>
-                <div className="text-xl font-black text-info">{generatedReport.tarefas.summary.totalProgress}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Em Execução
+                </div>
+                <div className="text-xl font-black text-info">
+                  {generatedReport.tarefas.summary.totalProgress}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Pausadas</div>
-                <div className="text-xl font-black text-warning">{generatedReport.tarefas.summary.totalPaused}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Pausadas
+                </div>
+                <div className="text-xl font-black text-warning">
+                  {generatedReport.tarefas.summary.totalPaused}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Pendentes</div>
-                <div className="text-xl font-black text-muted-foreground">{generatedReport.tarefas.summary.totalPending}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Pendentes
+                </div>
+                <div className="text-xl font-black text-muted-foreground">
+                  {generatedReport.tarefas.summary.totalPending}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Média Ativa / Tarefa</div>
-                <div className="text-sm font-black text-foreground mt-1 truncate leading-6">{generatedReport.tarefas.summary.avgCompletedActiveText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Média Ativa / Tarefa
+                </div>
+                <div className="text-sm font-black text-foreground mt-1 truncate leading-6">
+                  {generatedReport.tarefas.summary.avgCompletedActiveText}
+                </div>
               </div>
             </div>
 
             {/* DESTAQUE PRINCIPAL: Detail Table on top */}
             <div className="rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden print:border-0 print:bg-transparent print:rounded-none print:shadow-none print:overflow-visible">
               <div className="p-4 bg-surface-elevated/40 border-b border-border/40 flex items-center justify-between">
-                <h3 className="font-semibold text-sm text-foreground">Lista de Atividades no Período</h3>
-                <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded uppercase">Principal</span>
+                <h3 className="font-semibold text-sm text-foreground">
+                  Lista de Atividades no Período
+                </h3>
+                <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded uppercase">
+                  Principal
+                </span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs sm:text-sm">
@@ -1102,96 +1343,144 @@ function ReportsPage() {
                       <th className="p-3 text-center">Pausas</th>
                     </tr>
                   </thead>
-                    {generatedReport.tarefas.data.map((d: any) => {
-                      const st = STATUS.find((s) => s.id === d.status);
-                      
-                      const formatTaskDate = (isoStr: string | null | undefined) => {
-                        if (!isoStr) return "-";
-                        const date = new Date(isoStr);
-                        return (
-                          <div className="flex flex-col text-[10px] leading-tight font-medium print:text-[8px]">
-                            <span className="text-foreground">{date.toLocaleDateString("pt-BR")}</span>
-                            <span className="text-muted-foreground">{date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                          </div>
-                        );
-                      };
+                  {generatedReport.tarefas.data.map((d: any) => {
+                    const st = STATUS.find((s) => s.id === d.status);
 
+                    const formatTaskDate = (isoStr: string | null | undefined) => {
+                      if (!isoStr) return "-";
+                      const date = new Date(isoStr);
                       return (
-                        <tbody key={d.id} className="divide-y divide-border/40 text-xs print:break-inside-avoid border-b border-border/40">
-                          <tr className="hover:bg-accent/20">
-                            <td className="p-3 font-semibold text-foreground max-w-xs truncate print:max-w-none print:whitespace-normal print:overflow-visible">{d.title}</td>
-                            <td className="p-3 text-muted-foreground">{d.type}</td>
-                            <td className="p-3">
-                              <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border", st?.tone)}>
-                                {st?.label || d.status}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border", priorityTone(d.priority))}>
-                                {d.priority}
-                              </span>
-                            </td>
-                            <td className="p-3 text-foreground font-medium">{d.assignee}</td>
-                            <td className="p-3 text-muted-foreground">{d.machine}</td>
-                            <td className="p-3 text-muted-foreground">{formatTaskDate(d.started_at)}</td>
-                            <td className="p-3 text-muted-foreground">{formatTaskDate(d.completed_at)}</td>
-                            <td className="p-3 text-right tabular-nums text-foreground">{d.activeHrsText}</td>
-                            <td className="p-3 text-right tabular-nums text-muted-foreground">{d.pausedHrsText}</td>
-                            <td className="p-3 text-center tabular-nums font-semibold">
-                              <span className={cn("inline-block px-1.5 py-0.5 rounded text-[10px]", d.pauseCount > 0 ? "bg-purple-500/15 text-purple-400 font-bold border border-purple-500/20" : "text-muted-foreground")}>
-                                {d.pauseCount}
-                              </span>
+                        <div className="flex flex-col text-[10px] leading-tight font-medium print:text-[8px]">
+                          <span className="text-foreground">
+                            {date.toLocaleDateString("pt-BR")}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {date.toLocaleTimeString("pt-BR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <tbody
+                        key={d.id}
+                        className="divide-y divide-border/40 text-xs print:break-inside-avoid border-b border-border/40"
+                      >
+                        <tr className="hover:bg-accent/20">
+                          <td className="p-3 font-semibold text-foreground max-w-xs truncate print:max-w-none print:whitespace-normal print:overflow-visible">
+                            {d.title}
+                          </td>
+                          <td className="p-3 text-muted-foreground">{d.type}</td>
+                          <td className="p-3">
+                            <span
+                              className={cn(
+                                "inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border",
+                                st?.tone,
+                              )}
+                            >
+                              {st?.label || d.status}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={cn(
+                                "inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border",
+                                priorityTone(d.priority),
+                              )}
+                            >
+                              {d.priority}
+                            </span>
+                          </td>
+                          <td className="p-3 text-foreground font-medium">{d.assignee}</td>
+                          <td className="p-3 text-muted-foreground">{d.machine}</td>
+                          <td className="p-3 text-muted-foreground">
+                            {formatTaskDate(d.started_at)}
+                          </td>
+                          <td className="p-3 text-muted-foreground">
+                            {formatTaskDate(d.completed_at)}
+                          </td>
+                          <td className="p-3 text-right tabular-nums text-foreground">
+                            {d.activeHrsText}
+                          </td>
+                          <td className="p-3 text-right tabular-nums text-muted-foreground">
+                            {d.pausedHrsText}
+                          </td>
+                          <td className="p-3 text-center tabular-nums font-semibold">
+                            <span
+                              className={cn(
+                                "inline-block px-1.5 py-0.5 rounded text-[10px]",
+                                d.pauseCount > 0
+                                  ? "bg-purple-500/15 text-purple-400 font-bold border border-purple-500/20"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              {d.pauseCount}
+                            </span>
+                          </td>
+                        </tr>
+                        {/* Printable/inline detail of pauses under the task row */}
+                        {d.intervals && d.intervals.length > 0 && (
+                          <tr
+                            key={`${d.id}-pauses`}
+                            className="bg-purple-500/[0.02] border-b border-border/40"
+                          >
+                            <td
+                              colSpan={11}
+                              className="p-3 pl-8 text-xs text-muted-foreground border-t-0"
+                            >
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-[10px] text-purple-400 font-bold uppercase tracking-wider">
+                                  <Clock className="h-3 w-3" />
+                                  <span>Intervalos e Pausas de Atividade ({d.pauseCount})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {d.intervals.map((interval: any, index: number) => {
+                                    const pStart = new Date(interval.paused_at);
+                                    const pEnd = interval.resumed_at
+                                      ? new Date(interval.resumed_at)
+                                      : null;
+                                    const durationMs = pEnd
+                                      ? pEnd.getTime() - pStart.getTime()
+                                      : Date.now() - pStart.getTime();
+                                    const minutes = Math.floor(durationMs / (1000 * 60));
+                                    const durationText =
+                                      minutes > 0 ? `${minutes}m` : "poucos segundos";
+
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="inline-flex flex-col bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded text-[10px] text-purple-300 font-medium"
+                                      >
+                                        <span className="text-purple-200 font-semibold">
+                                          #{index + 1}: {interval.reason || "Intervalo geral"}
+                                        </span>
+                                        <span className="text-[9px] text-purple-300/80">
+                                          {pStart.toLocaleDateString("pt-BR")} às{" "}
+                                          {pStart.toLocaleTimeString("pt-BR", {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                          {pEnd
+                                            ? ` a ${pEnd.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} (${durationText})`
+                                            : " (Em aberto)"}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </td>
                           </tr>
-                          {/* Printable/inline detail of pauses under the task row */}
-                          {d.intervals && d.intervals.length > 0 && (
-                            <tr key={`${d.id}-pauses`} className="bg-purple-500/[0.02] border-b border-border/40">
-                              <td colSpan={11} className="p-3 pl-8 text-xs text-muted-foreground border-t-0">
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-1.5 text-[10px] text-purple-400 font-bold uppercase tracking-wider">
-                                    <Clock className="h-3 w-3" />
-                                    <span>Intervalos e Pausas de Atividade ({d.pauseCount})</span>
-                                  </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {d.intervals.map((interval: any, index: number) => {
-                                      const pStart = new Date(interval.paused_at);
-                                      const pEnd = interval.resumed_at ? new Date(interval.resumed_at) : null;
-                                      const durationMs = pEnd ? pEnd.getTime() - pStart.getTime() : Date.now() - pStart.getTime();
-                                      const minutes = Math.floor(durationMs / (1000 * 60));
-                                      const durationText = minutes > 0 ? `${minutes}m` : "poucos segundos";
-
-                                      return (
-                                        <div 
-                                          key={index} 
-                                          className="inline-flex flex-col bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded text-[10px] text-purple-300 font-medium"
-                                        >
-                                          <span className="text-purple-200 font-semibold">
-                                            #{index + 1}: {interval.reason || "Intervalo geral"}
-                                          </span>
-                                          <span className="text-[9px] text-purple-300/80">
-                                            {pStart.toLocaleDateString("pt-BR")} às {pStart.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                                            {pEnd ? (
-                                              ` a ${pEnd.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} (${durationText})`
-                                            ) : (
-                                              " (Em aberto)"
-                                            )}
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      );
-                    })}
+                        )}
+                      </tbody>
+                    );
+                  })}
                 </table>
               </div>
             </div>
-
-
           </div>
 
           {/* 3. REPORT: EMPLOYEE PERFORMANCE */}
@@ -1200,14 +1489,18 @@ function ReportsPage() {
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
                 <div>
-                  <h3 className="font-display font-bold text-lg text-foreground">3. Desempenho & Produtividade de Funcionários</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Análise detalhada de entregas, horas ativas e tempos médios por colaborador.</p>
+                  <h3 className="font-display font-bold text-lg text-foreground">
+                    3. Desempenho & Produtividade de Funcionários
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    Análise detalhada de entregas, horas ativas e tempos médios por colaborador.
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleExportCSV("desempenho")} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportCSV("desempenho")}
                 className="gap-1.5 h-8 text-xs border-success/40 text-success hover:bg-success/10 print:hidden"
               >
                 <Download className="h-3 w-3" /> Exportar Desempenho (CSV)
@@ -1217,28 +1510,52 @@ function ReportsPage() {
             {/* Performance Cards Summary */}
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Tarefas Totais</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.desempenho.summary.totalTasks}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Tarefas Totais
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.desempenho.summary.totalTasks}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Concluídas</div>
-                <div className="text-xl font-black text-success">{generatedReport.desempenho.summary.totalCompleted}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Concluídas
+                </div>
+                <div className="text-xl font-black text-success">
+                  {generatedReport.desempenho.summary.totalCompleted}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Tempo Ativo Total</div>
-                <div className="text-xl font-black text-info">{generatedReport.desempenho.summary.totalActiveTimeText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Tempo Ativo Total
+                </div>
+                <div className="text-xl font-black text-info">
+                  {generatedReport.desempenho.summary.totalActiveTimeText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Pausas Totais</div>
-                <div className="text-xl font-black text-purple-400">{generatedReport.desempenho.summary.totalPauses}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Pausas Totais
+                </div>
+                <div className="text-xl font-black text-purple-400">
+                  {generatedReport.desempenho.summary.totalPauses}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Média / Tarefa</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.desempenho.summary.avgActiveTimePerTaskText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Média / Tarefa
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.desempenho.summary.avgActiveTimePerTaskText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Melhor Entregador</div>
-                <div className="text-sm font-black text-primary truncate leading-6">{generatedReport.desempenho.summary.topEmployee}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Melhor Entregador
+                </div>
+                <div className="text-sm font-black text-primary truncate leading-6">
+                  {generatedReport.desempenho.summary.topEmployee}
+                </div>
               </div>
             </div>
 
@@ -1246,20 +1563,46 @@ function ReportsPage() {
             {generatedReport.desempenho.data.length > 0 && (
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="rounded-2xl border border-border/50 bg-card p-5 print:break-inside-avoid">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Volume de Tarefas por Funcionário</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                    Volume de Tarefas por Funcionário
+                  </h3>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={generatedReport.desempenho.data.slice(0, 10)}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis dataKey="name" stroke="#888" fontSize={9} />
                         <YAxis stroke="#888" fontSize={10} allowDecimals={false} />
-                        <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
                         <Legend />
-                        <Bar name="Concluídas" dataKey="completed" fill="#10b981" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="completed" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name="Concluídas"
+                          dataKey="completed"
+                          fill="#10b981"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="completed"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
-                        <Bar name="Total Criadas" dataKey="total" fill="#4b5563" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="total" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name="Total Criadas"
+                          dataKey="total"
+                          fill="#4b5563"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="total"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1267,20 +1610,46 @@ function ReportsPage() {
                 </div>
 
                 <div className="rounded-2xl border border-border/50 bg-card p-5 print:break-inside-avoid">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Tempo Trabalhado vs Pausado (Horas)</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                    Tempo Trabalhado vs Pausado (Horas)
+                  </h3>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={generatedReport.desempenho.data.slice(0, 10)}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis dataKey="name" stroke="#888" fontSize={9} />
                         <YAxis stroke="#888" fontSize={10} />
-                        <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
                         <Legend />
-                        <Bar name="Tempo Ativo (h)" dataKey="activeHoursNum" fill="#0ea5e9" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="activeHoursNum" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name="Tempo Ativo (h)"
+                          dataKey="activeHoursNum"
+                          fill="#0ea5e9"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="activeHoursNum"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
-                        <Bar name="Tempo Pausado (h)" dataKey="pausedHoursNum" fill="#a855f7" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="pausedHoursNum" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name="Tempo Pausado (h)"
+                          dataKey="pausedHoursNum"
+                          fill="#a855f7"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="pausedHoursNum"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1318,15 +1687,29 @@ function ReportsPage() {
                         <td className="p-3 font-semibold text-foreground">{d.name}</td>
                         <td className="p-3 text-muted-foreground">{d.badge}</td>
                         <td className="p-3 text-center tabular-nums">{d.total}</td>
-                        <td className="p-3 text-center tabular-nums text-success font-semibold">{d.completed}</td>
-                        <td className="p-3 text-center tabular-nums text-red-400 font-semibold">{d.urgentCompleted}</td>
+                        <td className="p-3 text-center tabular-nums text-success font-semibold">
+                          {d.completed}
+                        </td>
+                        <td className="p-3 text-center tabular-nums text-red-400 font-semibold">
+                          {d.urgentCompleted}
+                        </td>
                         <td className="p-3 text-center tabular-nums text-info">{d.progress}</td>
                         <td className="p-3 text-center tabular-nums text-purple-400">{d.paused}</td>
-                        <td className="p-3 text-center font-bold text-foreground">{d.completionRate}%</td>
-                        <td className="p-3 text-right tabular-nums text-foreground">{d.activeHrsText}</td>
-                        <td className="p-3 text-right tabular-nums text-foreground font-semibold">{d.avgActiveHrsText}</td>
-                        <td className="p-3 text-center tabular-nums text-purple-400 font-semibold">{d.pauseCount}</td>
-                        <td className="p-3 text-right tabular-nums text-muted-foreground">{d.pausedHrsText}</td>
+                        <td className="p-3 text-center font-bold text-foreground">
+                          {d.completionRate}%
+                        </td>
+                        <td className="p-3 text-right tabular-nums text-foreground">
+                          {d.activeHrsText}
+                        </td>
+                        <td className="p-3 text-right tabular-nums text-foreground font-semibold">
+                          {d.avgActiveHrsText}
+                        </td>
+                        <td className="p-3 text-center tabular-nums text-purple-400 font-semibold">
+                          {d.pauseCount}
+                        </td>
+                        <td className="p-3 text-right tabular-nums text-muted-foreground">
+                          {d.pausedHrsText}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1341,14 +1724,18 @@ function ReportsPage() {
               <div className="flex items-center gap-2">
                 <Wrench className="h-5 w-5 text-primary" />
                 <div>
-                  <h3 className="font-display font-bold text-lg text-foreground">4. Utilização de Máquinas & Equipamentos</h3>
-                  <p className="text-xs text-muted-foreground font-sans">Controle de uso e distribuição de tarefas entre os equipamentos cadastrados.</p>
+                  <h3 className="font-display font-bold text-lg text-foreground">
+                    4. Utilização de Máquinas & Equipamentos
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    Controle de uso e distribuição de tarefas entre os equipamentos cadastrados.
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleExportCSV("maquinas")} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportCSV("maquinas")}
                 className="gap-1.5 h-8 text-xs border-success/40 text-success hover:bg-success/10 print:hidden"
               >
                 <Download className="h-3 w-3" /> Exportar Máquinas (CSV)
@@ -1358,24 +1745,44 @@ function ReportsPage() {
             {/* Summary KPIs */}
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Máquinas Acionadas</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.maquinas.summary.totalMachines}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Máquinas Acionadas
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.maquinas.summary.totalMachines}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Serviços Totais</div>
-                <div className="text-xl font-black text-primary">{generatedReport.maquinas.summary.totalTasks}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Serviços Totais
+                </div>
+                <div className="text-xl font-black text-primary">
+                  {generatedReport.maquinas.summary.totalTasks}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Tempo de Trabalho</div>
-                <div className="text-xl font-black text-info">{generatedReport.maquinas.summary.totalActiveTimeText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Tempo de Trabalho
+                </div>
+                <div className="text-xl font-black text-info">
+                  {generatedReport.maquinas.summary.totalActiveTimeText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Média / Serviço</div>
-                <div className="text-xl font-black text-foreground">{generatedReport.maquinas.summary.avgActiveTimePerServiceText}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Média / Serviço
+                </div>
+                <div className="text-xl font-black text-foreground">
+                  {generatedReport.maquinas.summary.avgActiveTimePerServiceText}
+                </div>
               </div>
               <div className="rounded-xl border border-border/40 bg-card/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Máquina Destaque</div>
-                <div className="text-sm font-black text-foreground truncate leading-6 text-primary">{generatedReport.maquinas.summary.topMachine}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Máquina Destaque
+                </div>
+                <div className="text-sm font-black text-foreground truncate leading-6 text-primary">
+                  {generatedReport.maquinas.summary.topMachine}
+                </div>
               </div>
             </div>
 
@@ -1383,16 +1790,44 @@ function ReportsPage() {
             {generatedReport.maquinas.data.length > 0 && (
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="rounded-2xl border border-border/50 bg-card p-5 print:break-inside-avoid">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Tempo Ativo por Equipamento (Horas)</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                    Tempo Ativo por Equipamento (Horas)
+                  </h3>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={generatedReport.maquinas.data.slice(0, 10)} layout="vertical" margin={{ left: 15, right: 10 }}>
+                      <BarChart
+                        data={generatedReport.maquinas.data.slice(0, 10)}
+                        layout="vertical"
+                        margin={{ left: 15, right: 10 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis type="number" stroke="#888" fontSize={9} />
-                        <YAxis dataKey="code" type="category" stroke="#888" fontSize={10} width={60} />
-                        <Tooltip formatter={(val) => [`${val} horas`, "Uso Ativo"]} contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
-                        <Bar name="Horas Trabalhadas" dataKey="activeHrsNum" fill="#0ea5e9" radius={[0, 4, 4, 0]}>
-                          <LabelList dataKey="activeHrsNum" position="right" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <YAxis
+                          dataKey="code"
+                          type="category"
+                          stroke="#888"
+                          fontSize={10}
+                          width={60}
+                        />
+                        <Tooltip
+                          formatter={(val) => [`${val} horas`, "Uso Ativo"]}
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
+                        <Bar
+                          name="Horas Trabalhadas"
+                          dataKey="activeHrsNum"
+                          fill="#0ea5e9"
+                          radius={[0, 4, 4, 0]}
+                        >
+                          <LabelList
+                            dataKey="activeHrsNum"
+                            position="right"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1400,20 +1835,41 @@ function ReportsPage() {
                 </div>
 
                 <div className="rounded-2xl border border-border/50 bg-card p-5 print:break-inside-avoid">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Volume de Serviços por Equipamento</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                    Volume de Serviços por Equipamento
+                  </h3>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={generatedReport.maquinas.data.slice(0, 10)}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis dataKey="code" stroke="#888" fontSize={9} />
                         <YAxis stroke="#888" fontSize={10} allowDecimals={false} />
-                        <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
                         <Legend />
-                        <Bar name="Concluídos" dataKey="completed" fill="#10b981" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="completed" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name="Concluídos"
+                          dataKey="completed"
+                          fill="#10b981"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="completed"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                         <Bar name="Total" dataKey="total" fill="#4b5563" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="total" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                          <LabelList
+                            dataKey="total"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1425,7 +1881,9 @@ function ReportsPage() {
             {/* Machine list table */}
             <div className="rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden print:border-0 print:bg-transparent print:rounded-none print:shadow-none print:overflow-visible">
               <div className="p-4 bg-surface-elevated/40 border-b border-border/40">
-                <h3 className="font-semibold text-sm">Tempo e Volume de Trabalho em Equipamentos</h3>
+                <h3 className="font-semibold text-sm">
+                  Tempo e Volume de Trabalho em Equipamentos
+                </h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs sm:text-sm">
@@ -1447,7 +1905,9 @@ function ReportsPage() {
                         <td className="p-3 text-center tabular-nums">{d.total}</td>
                         <td className="p-3 text-center tabular-nums text-success">{d.completed}</td>
                         <td className="p-3 text-center tabular-nums">{d.assigneesCount}</td>
-                        <td className="p-3 text-right tabular-nums font-bold text-foreground">{d.activeHrsText}</td>
+                        <td className="p-3 text-right tabular-nums font-bold text-foreground">
+                          {d.activeHrsText}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1462,7 +1922,8 @@ function ReportsPage() {
           <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3 animate-pulse" />
           <h3 className="font-semibold text-foreground text-lg">Nenhum relatório gerado</h3>
           <p className="text-sm mt-1 max-w-md mx-auto">
-            Configure os filtros no painel de parâmetros e clique no botão <strong>Gerar Relatórios</strong> para processar as informações de forma unificada.
+            Configure os filtros no painel de parâmetros e clique no botão{" "}
+            <strong>Gerar Relatórios</strong> para processar as informações de forma unificada.
           </p>
         </div>
       )}

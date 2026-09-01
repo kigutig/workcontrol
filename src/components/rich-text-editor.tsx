@@ -31,15 +31,21 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
     if (currentList.length > 0) {
       if (currentListType === "ul") {
         elements.push(
-          <ul key={`ul-${key}`} className="list-disc pl-5 mb-2.5 space-y-1 text-sm text-foreground/90">
+          <ul
+            key={`ul-${key}`}
+            className="list-disc pl-5 mb-2.5 space-y-1 text-sm text-foreground/90"
+          >
             {...currentList}
-          </ul>
+          </ul>,
         );
       } else if (currentListType === "ol") {
         elements.push(
-          <ol key={`ol-${key}`} className="list-decimal pl-5 mb-2.5 space-y-1 text-sm text-foreground/90">
+          <ol
+            key={`ol-${key}`}
+            className="list-decimal pl-5 mb-2.5 space-y-1 text-sm text-foreground/90"
+          >
             {...currentList}
-          </ol>
+          </ol>,
         );
       }
       currentList = [];
@@ -112,7 +118,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
           className="text-primary underline hover:text-primary/80 font-medium inline-flex items-center gap-0.5"
         >
           {label}
-        </a>
+        </a>,
       );
 
       lastIndex = linkRegex.lastIndex;
@@ -143,10 +149,12 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
             readOnly
             className="mt-1 h-4 w-4 rounded border-border bg-background text-primary focus:ring-0 cursor-default"
           />
-          <span className={checked ? "line-through text-muted-foreground/70" : "text-foreground/90"}>
+          <span
+            className={checked ? "line-through text-muted-foreground/70" : "text-foreground/90"}
+          >
             {parseInline(content)}
           </span>
-        </div>
+        </div>,
       );
       return;
     }
@@ -161,7 +169,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
       currentList.push(
         <li key={`li-${idx}`} className="my-0.5">
           {parseInline(bulletMatch[2])}
-        </li>
+        </li>,
       );
       return;
     }
@@ -176,7 +184,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
       currentList.push(
         <li key={`li-${idx}`} className="my-0.5">
           {parseInline(numberedMatch[2])}
-        </li>
+        </li>,
       );
       return;
     }
@@ -193,19 +201,19 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
         elements.push(
           <h1 key={`h1-${idx}`} className="text-base font-bold mt-4 mb-2 text-foreground">
             {parsedContent}
-          </h1>
+          </h1>,
         );
       } else if (level === 2) {
         elements.push(
           <h2 key={`h2-${idx}`} className="text-sm font-bold mt-3 mb-1.5 text-foreground">
             {parsedContent}
-          </h2>
+          </h2>,
         );
       } else {
         elements.push(
           <h3 key={`h3-${idx}`} className="text-xs font-semibold mt-2.5 mb-1 text-foreground">
             {parsedContent}
-          </h3>
+          </h3>,
         );
       }
       return;
@@ -219,7 +227,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
       elements.push(
         <p key={`p-${idx}`} className="mb-1.5 leading-relaxed text-sm text-foreground/90">
           {parseInline(line)}
-        </p>
+        </p>,
       );
     }
   });
@@ -279,7 +287,9 @@ export function RichTextEditor({
     }
   }, [controlledValue, isControlled]);
 
-  const handleFormat = (type: "bold" | "italic" | "bullet" | "number" | "checklist" | "h1" | "h2" | "link") => {
+  const handleFormat = (
+    type: "bold" | "italic" | "bullet" | "number" | "checklist" | "h1" | "h2" | "link",
+  ) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -332,7 +342,9 @@ export function RichTextEditor({
   };
 
   return (
-    <div className={`w-full rounded-xl border border-border/80 bg-surface-elevated/40 shadow-sm overflow-hidden flex flex-col ${className}`}>
+    <div
+      className={`w-full rounded-xl border border-border/80 bg-surface-elevated/40 shadow-sm overflow-hidden flex flex-col ${className}`}
+    >
       {/* Header toolbar */}
       <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-2 py-1 gap-2 flex-wrap shrink-0">
         {/* Formatting Buttons */}
@@ -478,17 +490,12 @@ export function RichTextEditor({
             {currentValue.trim() ? (
               <FormattedText text={currentValue} />
             ) : (
-              <span className="text-muted-foreground/60 italic text-xs">Visualização vazia. Digite algo para formatar!</span>
+              <span className="text-muted-foreground/60 italic text-xs">
+                Visualização vazia. Digite algo para formatar!
+              </span>
             )}
             {/* Hidden field so the form can still submit when tab is active */}
-            {name && (
-              <textarea
-                name={name}
-                value={currentValue}
-                readOnly
-                className="sr-only"
-              />
-            )}
+            {name && <textarea name={name} value={currentValue} readOnly className="sr-only" />}
           </div>
         )}
       </div>

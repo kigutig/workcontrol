@@ -53,10 +53,10 @@
   --background: oklch(0.16 0.005 60);
   --foreground: oklch(0.96 0.005 80);
 
-  --surface: oklch(0.20 0.005 60);
+  --surface: oklch(0.2 0.005 60);
   --surface-elevated: oklch(0.235 0.006 60);
 
-  --card: oklch(0.20 0.005 60);
+  --card: oklch(0.2 0.005 60);
   --card-foreground: oklch(0.96 0.005 80);
 
   --popover: oklch(0.22 0.005 60);
@@ -72,10 +72,10 @@
   --muted: oklch(0.26 0.005 60);
   --muted-foreground: oklch(0.68 0.01 80);
 
-  --accent: oklch(0.30 0.008 60);
+  --accent: oklch(0.3 0.008 60);
   --accent-foreground: oklch(0.96 0.005 80);
 
-  --destructive: oklch(0.60 0.22 27);
+  --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.98 0.005 80);
 
   --success: oklch(0.68 0.15 155);
@@ -87,7 +87,7 @@
   --info: oklch(0.68 0.13 230);
   --info-foreground: oklch(0.14 0.01 60);
 
-  --border: oklch(0.30 0.005 60);
+  --border: oklch(0.3 0.005 60);
   --input: oklch(0.26 0.005 60);
   --ring: oklch(0.68 0.19 45);
 
@@ -107,13 +107,19 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
     font-weight: 700;
@@ -142,8 +148,18 @@
 
 /* Scrollbar */
 @layer base {
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: var(--color-background); }
-  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted-foreground); }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+  }
 }

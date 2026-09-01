@@ -43,7 +43,7 @@ function AuthenticatedLayout() {
                 .from("tasks")
                 .update({
                   status: "paused",
-                  intervals: check.newIntervals as any
+                  intervals: check.newIntervals as any,
                 } as never)
                 .eq("id", t.id);
 
@@ -51,7 +51,9 @@ function AuthenticatedLayout() {
                 qc.invalidateQueries({ queryKey: ["tasks"] });
                 qc.invalidateQueries({ queryKey: ["my-tasks"] });
                 qc.invalidateQueries({ queryKey: ["task", t.id] });
-                toast.info(`Tarefa "${t.title}" pausada automaticamente às 18:00 (Fim do Expediente)`);
+                toast.info(
+                  `Tarefa "${t.title}" pausada automaticamente às 18:00 (Fim do Expediente)`,
+                );
               } else {
                 console.error("Error auto-pausing task:", error);
               }
@@ -83,7 +85,7 @@ function AuthenticatedLayout() {
           if (permission.display !== "granted") {
             await LocalNotifications.requestPermissions();
           }
-          
+
           // Register standard high importance Android channel
           await LocalNotifications.createChannel({
             id: "tasks-channel",
@@ -129,46 +131,44 @@ function AuthenticatedLayout() {
     };
 
     const userId = session.user.id;
-    const channel = supabase
-      .channel("new-tasks-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "tasks",
-        },
-        async (payload) => {
-          const newTask = payload.new;
-          if (!newTask) return;
+    const channel = supabase.channel("new-tasks-realtime").on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "tasks",
+      },
+      async (payload) => {
+        const newTask = payload.new;
+        if (!newTask) return;
 
-          if (isSupervisor) {
-            if (newTask.created_by !== userId) {
-              try {
-                const { data: profile } = await supabase
-                  .from("profiles")
-                  .select("name")
-                  .eq("id", newTask.created_by)
-                  .single();
-                const name = profile?.name || "Funcionário";
-                triggerLocalNotification(
-                  "Nova Tarefa Criada! 📋",
-                  `"${newTask.title}" foi criada por ${name}.`
-                );
-              } catch (err) {
-                console.error(err);
-              }
-            }
-          } else {
-            if (newTask.assignee_id === userId && newTask.created_by !== userId) {
+        if (isSupervisor) {
+          if (newTask.created_by !== userId) {
+            try {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("name")
+                .eq("id", newTask.created_by)
+                .single();
+              const name = profile?.name || "Funcionário";
               triggerLocalNotification(
-                "Nova Tarefa Atribuída! 📋",
-                `"${newTask.title}"\nPrioridade: ${newTask.priority || "Normal"} · Tipo: ${newTask.type || "Geral"}`
+                "Nova Tarefa Criada! 📋",
+                `"${newTask.title}" foi criada por ${name}.`,
               );
+            } catch (err) {
+              console.error(err);
             }
           }
+        } else {
+          if (newTask.assignee_id === userId && newTask.created_by !== userId) {
+            triggerLocalNotification(
+              "Nova Tarefa Atribuída! 📋",
+              `"${newTask.title}"\nPrioridade: ${newTask.priority || "Normal"} · Tipo: ${newTask.type || "Geral"}`,
+            );
+          }
         }
-      );
+      },
+    );
 
     if (isSupervisor) {
       channel.on(
@@ -204,7 +204,7 @@ function AuthenticatedLayout() {
                 const statusName = friendlyStatus[newTask.status] || newTask.status;
                 triggerLocalNotification(
                   "Status de Tarefa Alterado! 🔄",
-                  `${name} moveu "${newTask.title}" para ${statusName}.`
+                  `${name} moveu "${newTask.title}" para ${statusName}.`,
                 );
               }
 
@@ -212,7 +212,7 @@ function AuthenticatedLayout() {
               if (oldTask && oldTask.photo_url !== newTask.photo_url && newTask.photo_url) {
                 triggerLocalNotification(
                   "Nova Evidência de Foto! 📸",
-                  `${name} anexou foto em "${newTask.title}".`
+                  `${name} anexou foto em "${newTask.title}".`,
                 );
               }
 
@@ -220,14 +220,14 @@ function AuthenticatedLayout() {
               if (oldTask && oldTask.notes !== newTask.notes && newTask.notes) {
                 triggerLocalNotification(
                   "Nova Observação Adicionada! ✍️",
-                  `${name} adicionou nota em "${newTask.title}".`
+                  `${name} adicionou nota em "${newTask.title}".`,
                 );
               }
             } catch (err) {
               console.error(err);
             }
           }
-        }
+        },
       );
     }
 

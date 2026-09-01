@@ -80,10 +80,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "FitControl — Gestão de Oficina & Produção" },
-      { name: "description", content: "Sistema de controle de tarefas, produção e evidências para oficinas de equipamentos de academia." },
+      {
+        name: "description",
+        content:
+          "Sistema de controle de tarefas, produção e evidências para oficinas de equipamentos de academia.",
+      },
       { name: "author", content: "FitControl" },
       { property: "og:title", content: "FitControl — Gestão de Oficina & Produção" },
-      { property: "og:description", content: "Controle industrial de tarefas, montagem, pintura, embalagem e evidências fotográficas." },
+      {
+        property: "og:description",
+        content:
+          "Controle industrial de tarefas, montagem, pintura, embalagem e evidências fotográficas.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

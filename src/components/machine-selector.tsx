@@ -3,11 +3,7 @@ import { Check, ChevronsUpDown, Search, Wrench, X, Plus, List } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,16 +35,14 @@ export function MachineFormFields({
 
   const selectedMachine = useMemo(
     () => machines.find((m) => m.id === machineId),
-    [machines, machineId]
+    [machines, machineId],
   );
 
   const filteredMachines = useMemo(() => {
     if (!search.trim()) return machines;
     const q = search.toLowerCase().trim();
     return machines.filter(
-      (m) =>
-        m.code.toLowerCase().includes(q) ||
-        m.name.toLowerCase().includes(q)
+      (m) => m.code.toLowerCase().includes(q) || m.name.toLowerCase().includes(q),
     );
   }, [machines, search]);
 
@@ -75,7 +69,11 @@ export function MachineFormFields({
               const newMode = mode === "select" ? "custom" : "select";
               setMode(newMode);
               if (newMode === "custom") {
-                onChange({ machineId: null, machineName: machineName || (selectedMachine?.name ?? ""), machineCode: machineCode || (selectedMachine?.code ?? "") });
+                onChange({
+                  machineId: null,
+                  machineName: machineName || (selectedMachine?.name ?? ""),
+                  machineCode: machineCode || (selectedMachine?.code ?? ""),
+                });
               }
             }}
             className="h-7 text-xs px-2 text-primary hover:text-primary/80"
@@ -144,7 +142,9 @@ export function MachineFormFields({
                   onClick={() => handleSelectMachine(null)}
                   className={cn(
                     "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors",
-                    !machineId ? "bg-primary/10 text-primary font-bold" : "hover:bg-accent text-muted-foreground"
+                    !machineId
+                      ? "bg-primary/10 text-primary font-bold"
+                      : "hover:bg-accent text-muted-foreground",
                   )}
                 >
                   <span>Nenhuma máquina</span>
@@ -159,7 +159,9 @@ export function MachineFormFields({
                       onClick={() => handleSelectMachine(m)}
                       className={cn(
                         "flex items-center justify-between px-2.5 py-2 rounded-lg text-xs cursor-pointer transition-colors",
-                        isSelected ? "bg-primary/15 text-primary font-semibold" : "hover:bg-accent text-foreground"
+                        isSelected
+                          ? "bg-primary/15 text-primary font-semibold"
+                          : "hover:bg-accent text-foreground",
                       )}
                     >
                       <div className="flex items-center gap-2 min-w-0">
@@ -212,7 +214,8 @@ export function MachineFormFields({
           value={machineCode}
           onChange={(e) =>
             onChange({
-              machineId: mode === "select" && selectedMachine?.code === e.target.value ? machineId : null,
+              machineId:
+                mode === "select" && selectedMachine?.code === e.target.value ? machineId : null,
               machineName,
               machineCode: e.target.value.toUpperCase(),
             })
@@ -255,7 +258,7 @@ export function MachineSelector({
 export async function resolveOrCreateMachine(
   machineId: string | null,
   machineCode: string,
-  machineName: string
+  machineName: string,
 ): Promise<string | null> {
   if (machineId) return machineId;
   const code = machineCode.trim().toUpperCase();

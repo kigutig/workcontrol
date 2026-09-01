@@ -6,12 +6,12 @@ Pipeline completo de integração e entrega contínua com segurança integrada (
 
 ## 📊 Status dos Workflows
 
-| Workflow | Trigger | Descrição |
-|----------|---------|-----------|
-| `ci.yml` | Push/PR | Lint, types, audit, testes, build |
-| `security.yml` | Push main + semanal | SBOM, Trivy, OWASP, Semgrep |
-| `cd.yml` | Push main / PR | Deploy Cloudflare Pages |
-| `codeql.yml` | Push/PR + semanal | SAST avançado |
+| Workflow       | Trigger             | Descrição                         |
+| -------------- | ------------------- | --------------------------------- |
+| `ci.yml`       | Push/PR             | Lint, types, audit, testes, build |
+| `security.yml` | Push main + semanal | SBOM, Trivy, OWASP, Semgrep       |
+| `cd.yml`       | Push main / PR      | Deploy Cloudflare Pages           |
+| `codeql.yml`   | Push/PR + semanal   | SAST avançado                     |
 
 ---
 
@@ -59,6 +59,7 @@ npm run test:coverage     # Com relatório de cobertura
 ```
 
 **Testes incluídos:**
+
 - `src/__tests__/lib/security.test.ts` — 40+ casos de teste de segurança
 - `src/__tests__/lib/task-utils.test.ts` — lógica de negócio das tarefas
 - `src/__tests__/lib/utils.test.ts` — utilitário `cn()`
@@ -73,6 +74,7 @@ npm run test:security     # Apenas testes de segurança
 ```
 
 **Testes incluídos:**
+
 - `e2e/auth.spec.ts` — fluxo de autenticação
 - `e2e/dashboard.spec.ts` — smoke do dashboard
 - `e2e/security.spec.ts` — headers, XSS, CSP
@@ -81,16 +83,16 @@ npm run test:security     # Apenas testes de segurança
 
 ## 🛡️ DevSecOps — Ferramentas de Segurança
 
-| Ferramenta | Tipo | O que detecta |
-|-----------|------|---------------|
-| **npm audit** | SCA | Vulnerabilidades em dependências |
-| **Gitleaks** | Secret Scan | Secrets e tokens no código |
-| **GitHub Dependency Review** | SCA | Deps com vulnerabilidades em PRs |
-| **Trivy** | SCA + IaC | CVEs no filesystem e misconfigurations |
-| **OWASP Dependency-Check** | SCA | Vulnerabilidades (banco NVD) |
-| **Semgrep** | SAST | Padrões inseguros: XSS, SQLi, OWASP Top 10 |
-| **CodeQL** | SAST | Análise de fluxo de dados, taint tracking |
-| **CycloneDX SBOM** | Supply Chain | Inventário completo de dependências |
+| Ferramenta                   | Tipo         | O que detecta                              |
+| ---------------------------- | ------------ | ------------------------------------------ |
+| **npm audit**                | SCA          | Vulnerabilidades em dependências           |
+| **Gitleaks**                 | Secret Scan  | Secrets e tokens no código                 |
+| **GitHub Dependency Review** | SCA          | Deps com vulnerabilidades em PRs           |
+| **Trivy**                    | SCA + IaC    | CVEs no filesystem e misconfigurations     |
+| **OWASP Dependency-Check**   | SCA          | Vulnerabilidades (banco NVD)               |
+| **Semgrep**                  | SAST         | Padrões inseguros: XSS, SQLi, OWASP Top 10 |
+| **CodeQL**                   | SAST         | Análise de fluxo de dados, taint tracking  |
+| **CycloneDX SBOM**           | Supply Chain | Inventário completo de dependências        |
 
 ---
 

@@ -46,7 +46,10 @@ export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({
     meta: [
       { title: "Gestão de Usuários — FitControl" },
-      { name: "description", content: "Gerenciamento de usuários, permissões e papéis da oficina." },
+      {
+        name: "description",
+        content: "Gerenciamento de usuários, permissões e papéis da oficina.",
+      },
     ],
   }),
   component: UsersPage,
@@ -63,9 +66,24 @@ type UserProfileWithRole = {
 };
 
 const ROLES = [
-  { value: "admin", label: "Administrador", desc: "Acesso total ao sistema e gestão de usuários", tone: "bg-primary/20 text-primary border-primary/40" },
-  { value: "supervisor", label: "Supervisor", desc: "Gerencia tarefas, máquinas e equipe de oficina", tone: "bg-info/20 text-info border-info/40" },
-  { value: "worker", label: "Operacional (Worker)", desc: "Executa e atualiza tarefas atribuídas", tone: "bg-accent text-muted-foreground border-border" },
+  {
+    value: "admin",
+    label: "Administrador",
+    desc: "Acesso total ao sistema e gestão de usuários",
+    tone: "bg-primary/20 text-primary border-primary/40",
+  },
+  {
+    value: "supervisor",
+    label: "Supervisor",
+    desc: "Gerencia tarefas, máquinas e equipe de oficina",
+    tone: "bg-info/20 text-info border-info/40",
+  },
+  {
+    value: "worker",
+    label: "Operacional (Worker)",
+    desc: "Executa e atualiza tarefas atribuídas",
+    tone: "bg-accent text-muted-foreground border-border",
+  },
 ];
 
 function UsersPage() {
@@ -89,10 +107,12 @@ function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users-list"],
     queryFn: async () => {
-      const [{ data: profiles, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("*"),
-      ]);
+      const [{ data: profiles, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all(
+        [
+          supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+          supabase.from("user_roles").select("*"),
+        ],
+      );
 
       if (pErr) throw pErr;
       if (rErr) throw rErr;
@@ -153,7 +173,7 @@ function UsersPage() {
           user_id: createdUserId,
           role: newRole,
         },
-        { onConflict: "user_id,role" }
+        { onConflict: "user_id,role" },
       );
     },
     onSuccess: () => {
@@ -173,7 +193,12 @@ function UsersPage() {
 
   // Update User Profile & Role Mutation
   const updateUser = useMutation({
-    mutationFn: async (updated: { id: string; name: string; badge: string; role: "admin" | "supervisor" | "worker" }) => {
+    mutationFn: async (updated: {
+      id: string;
+      name: string;
+      badge: string;
+      role: "admin" | "supervisor" | "worker";
+    }) => {
       // 1. Update Profile
       const { error: pErr } = await supabase
         .from("profiles")
@@ -238,9 +263,13 @@ function UsersPage() {
           </div>
           <h2 className="font-display text-2xl font-bold">Acesso Exclusivo para Administradores</h2>
           <p className="text-muted-foreground max-w-md mt-2 mb-6">
-            Você não possui privilégios de administrador para acessar o gerenciamento de usuários do sistema.
+            Você não possui privilégios de administrador para acessar o gerenciamento de usuários do
+            sistema.
           </p>
-          <Button onClick={() => navigate({ to: "/dashboard" })} className="bg-gradient-ember shadow-ember">
+          <Button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="bg-gradient-ember shadow-ember"
+          >
             Voltar para o Dashboard
           </Button>
         </div>
@@ -317,7 +346,10 @@ function UsersPage() {
                   <Label className="flex items-center gap-1.5 font-semibold">
                     <Shield className="h-4 w-4 text-muted-foreground" /> Papel de Acesso (Role)
                   </Label>
-                  <Select value={newRole} onValueChange={(v: "admin" | "supervisor" | "worker") => setNewRole(v)}>
+                  <Select
+                    value={newRole}
+                    onValueChange={(v: "admin" | "supervisor" | "worker") => setNewRole(v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o papel" />
                     </SelectTrigger>
@@ -346,8 +378,16 @@ function UsersPage() {
                 <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createUser.isPending} className="bg-gradient-ember shadow-ember">
-                  {createUser.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Usuário"}
+                <Button
+                  type="submit"
+                  disabled={createUser.isPending}
+                  className="bg-gradient-ember shadow-ember"
+                >
+                  {createUser.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Criar Usuário"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -358,7 +398,9 @@ function UsersPage() {
       {/* Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Total de Usuários</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            Total de Usuários
+          </div>
           <div className="mt-2 font-display text-3xl font-bold tabular-nums">{users.length}</div>
           <div className="mt-1 text-xs text-muted-foreground">cadastrados no sistema</div>
         </div>
@@ -367,7 +409,9 @@ function UsersPage() {
           <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1">
             <Shield className="h-3.5 w-3.5" /> Administradores
           </div>
-          <div className="mt-2 font-display text-3xl font-bold tabular-nums text-primary">{countAdmin}</div>
+          <div className="mt-2 font-display text-3xl font-bold tabular-nums text-primary">
+            {countAdmin}
+          </div>
           <div className="mt-1 text-xs text-muted-foreground">controle total</div>
         </div>
 
@@ -375,12 +419,16 @@ function UsersPage() {
           <div className="text-xs uppercase tracking-widest text-info font-bold flex items-center gap-1">
             <ShieldCheck className="h-3.5 w-3.5" /> Supervisores
           </div>
-          <div className="mt-2 font-display text-3xl font-bold tabular-nums text-info">{countSupervisor}</div>
+          <div className="mt-2 font-display text-3xl font-bold tabular-nums text-info">
+            {countSupervisor}
+          </div>
           <div className="mt-1 text-xs text-muted-foreground">gestores de tarefas</div>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Operacionais</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">
+            Operacionais
+          </div>
           <div className="mt-2 font-display text-3xl font-bold tabular-nums">{countWorker}</div>
           <div className="mt-1 text-xs text-muted-foreground">executores de tarefas</div>
         </div>
@@ -449,15 +497,19 @@ function UsersPage() {
                         {initials}
                       </div>
                       <div>
-                        <h4 className="font-display font-bold text-base text-foreground leading-snug">{u.name}</h4>
-                        <span className="text-xs text-muted-foreground font-medium block mt-0.5">{u.badge}</span>
+                        <h4 className="font-display font-bold text-base text-foreground leading-snug">
+                          {u.name}
+                        </h4>
+                        <span className="text-xs text-muted-foreground font-medium block mt-0.5">
+                          {u.badge}
+                        </span>
                       </div>
                     </div>
 
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase border",
-                        roleObj?.tone
+                        roleObj?.tone,
                       )}
                     >
                       {u.role === "admin" && <Shield className="h-3 w-3" />}
@@ -566,8 +618,16 @@ function UsersPage() {
                 <Button type="button" variant="outline" onClick={() => setEditUser(null)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={updateUser.isPending} className="bg-gradient-ember shadow-ember">
-                  {updateUser.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                <Button
+                  type="submit"
+                  disabled={updateUser.isPending}
+                  className="bg-gradient-ember shadow-ember"
+                >
+                  {updateUser.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Salvar Alterações"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

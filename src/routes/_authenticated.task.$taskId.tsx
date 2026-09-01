@@ -51,7 +51,13 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
@@ -62,7 +68,10 @@ export const Route = createFileRoute("/_authenticated/task/$taskId")({
   head: () => ({
     meta: [
       { title: "Painel da Tarefa — FitControl" },
-      { name: "description", content: "Acompanhe métricas, fotos, intervalos e informações em tempo real." },
+      {
+        name: "description",
+        content: "Acompanhe métricas, fotos, intervalos e informações em tempo real.",
+      },
     ],
   }),
   component: TaskDashboardPage,
@@ -105,13 +114,9 @@ function TaskDashboardPage() {
   const { data: task, isLoading: isLoadingTask } = useQuery({
     queryKey: ["task", taskId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("id", taskId)
-        .single();
+      const { data, error } = await supabase.from("tasks").select("*").eq("id", taskId).single();
       if (error) throw error;
-      
+
       // Parse intervals JSON safely
       const parsedIntervals = Array.isArray(data.intervals)
         ? (data.intervals as unknown as TaskInterval[])
@@ -136,8 +141,14 @@ function TaskDashboardPage() {
     queryFn: async () => (await supabase.from("machines").select("id,code,name")).data ?? [],
   });
 
-  const assigneeProfile = useMemo(() => profiles.find((p) => p.id === task?.assignee_id), [profiles, task]);
-  const machineObj = useMemo(() => machines.find((m) => m.id === task?.machine_id), [machines, task]);
+  const assigneeProfile = useMemo(
+    () => profiles.find((p) => p.id === task?.assignee_id),
+    [profiles, task],
+  );
+  const machineObj = useMemo(
+    () => machines.find((m) => m.id === task?.machine_id),
+    [machines, task],
+  );
   const currentStatusObj = useMemo(() => STATUS.find((s) => s.id === task?.status), [task]);
   const isPending = task?.status === "pending";
   const isProgress = task?.status === "progress";
@@ -145,7 +156,8 @@ function TaskDashboardPage() {
   const isReview = task?.status === "review";
   const isDone = task?.status === "done";
 
-  const canManage = isSupervisor || isAdmin || task?.assignee_id === user?.id || task?.created_by === user?.id;
+  const canManage =
+    isSupervisor || isAdmin || task?.assignee_id === user?.id || task?.created_by === user?.id;
 
   // Initialize newNotes when task loads
   useEffect(() => {
@@ -156,7 +168,12 @@ function TaskDashboardPage() {
 
   // Mutations
   const updateStatusMutation = useMutation({
-    mutationFn: async (payload: { status: Status; started_at?: string | null; completed_at?: string | null; intervals?: TaskInterval[] }) => {
+    mutationFn: async (payload: {
+      status: Status;
+      started_at?: string | null;
+      completed_at?: string | null;
+      intervals?: TaskInterval[];
+    }) => {
       const { error } = await supabase
         .from("tasks")
         .update(payload as never)
@@ -210,7 +227,8 @@ function TaskDashboardPage() {
 
   const handleConfirmPause = () => {
     if (!task) return;
-    const finalReason = pauseReason === "Outro" ? customPauseReason || "Outro compromisso" : pauseReason;
+    const finalReason =
+      pauseReason === "Outro" ? customPauseReason || "Outro compromisso" : pauseReason;
     const newIntervals = [...(task.intervals || [])];
     newIntervals.push({
       paused_at: new Date().toISOString(),
@@ -297,7 +315,11 @@ function TaskDashboardPage() {
   };
 
   const handleResetTask = () => {
-    if (confirm("Deseja redefinir a tarefa para Pendente? Isso limpará a data de início, conclusão e os intervalos.")) {
+    if (
+      confirm(
+        "Deseja redefinir a tarefa para Pendente? Isso limpará a data de início, conclusão e os intervalos.",
+      )
+    ) {
       updateStatusMutation.mutate({
         status: "pending",
         started_at: null,
@@ -323,7 +345,9 @@ function TaskDashboardPage() {
           toast.error(`Falha no upload de ${file.name}`, { description: error.message });
           continue;
         }
-        const { data: signed } = await supabase.storage.from("evidence").createSignedUrl(path, 60 * 60 * 24 * 30);
+        const { data: signed } = await supabase.storage
+          .from("evidence")
+          .createSignedUrl(path, 60 * 60 * 24 * 30);
         uploadedUrls.push(signed?.signedUrl ?? path);
       }
 
@@ -339,7 +363,9 @@ function TaskDashboardPage() {
 
         qc.invalidateQueries({ queryKey: ["task", taskId] });
         toast.success(
-          uploadedUrls.length === 1 ? "Evidência enviada" : `${uploadedUrls.length} evidências enviadas`
+          uploadedUrls.length === 1
+            ? "Evidência enviada"
+            : `${uploadedUrls.length} evidências enviadas`,
         );
       }
     } catch (err: unknown) {
@@ -378,7 +404,9 @@ function TaskDashboardPage() {
         if (photo.webPath) {
           const response = await fetch(photo.webPath);
           const blob = await response.blob();
-          files.push(new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }));
+          files.push(
+            new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }),
+          );
         }
       }
       return files;
@@ -526,12 +554,24 @@ function TaskDashboardPage() {
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status Atual</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Status Atual
+                </span>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={cn("inline-flex px-3 py-1 rounded-md text-xs font-bold uppercase border", currentStatusObj?.tone)}>
+                  <span
+                    className={cn(
+                      "inline-flex px-3 py-1 rounded-md text-xs font-bold uppercase border",
+                      currentStatusObj?.tone,
+                    )}
+                  >
                     {typeIcon(task.type)} {currentStatusObj?.label || task.status}
                   </span>
-                  <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border", priorityTone(task.priority))}>
+                  <span
+                    className={cn(
+                      "inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border",
+                      priorityTone(task.priority),
+                    )}
+                  >
                     Prioridade {task.priority}
                   </span>
                 </div>
@@ -539,7 +579,12 @@ function TaskDashboardPage() {
 
               {/* Reset/Restart for admin/supervisor */}
               {isSupervisor && !isPending && (
-                <Button variant="ghost" size="sm" onClick={handleResetTask} className="text-destructive hover:bg-destructive/10">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetTask}
+                  className="text-destructive hover:bg-destructive/10"
+                >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" /> Redefinir para Pendente
                 </Button>
               )}
@@ -548,20 +593,32 @@ function TaskDashboardPage() {
             {/* Smart Action Buttons according to current status */}
             <div className="flex flex-wrap gap-3">
               {isPending && (
-                <Button onClick={handleStartTask} className="bg-info text-info-foreground hover:bg-info/90 font-semibold shadow-lg shadow-info/20 w-full sm:w-auto">
+                <Button
+                  onClick={handleStartTask}
+                  className="bg-info text-info-foreground hover:bg-info/90 font-semibold shadow-lg shadow-info/20 w-full sm:w-auto"
+                >
                   <Play className="h-4 w-4 mr-2" /> Iniciar Trabalho
                 </Button>
               )}
 
               {isProgress && (
                 <>
-                  <Button onClick={handleOpenPauseDialog} className="bg-purple-600 text-white hover:bg-purple-700 font-semibold shadow-lg shadow-purple-600/20">
+                  <Button
+                    onClick={handleOpenPauseDialog}
+                    className="bg-purple-600 text-white hover:bg-purple-700 font-semibold shadow-lg shadow-purple-600/20"
+                  >
                     <Pause className="h-4 w-4 mr-2" /> Fazer Intervalo (Pausar)
                   </Button>
-                  <Button onClick={handleSendToReview} className="bg-warning text-warning-foreground hover:bg-warning/90 font-semibold shadow-lg shadow-warning/20">
+                  <Button
+                    onClick={handleSendToReview}
+                    className="bg-warning text-warning-foreground hover:bg-warning/90 font-semibold shadow-lg shadow-warning/20"
+                  >
                     <Clock className="h-4 w-4 mr-2" /> Enviar para Revisão
                   </Button>
-                  <Button onClick={handleCompleteTask} className="bg-gradient-ember text-white shadow-ember font-semibold">
+                  <Button
+                    onClick={handleCompleteTask}
+                    className="bg-gradient-ember text-white shadow-ember font-semibold"
+                  >
                     <CheckCircle2 className="h-4 w-4 mr-2" /> Concluir Tarefa
                   </Button>
                 </>
@@ -569,13 +626,22 @@ function TaskDashboardPage() {
 
               {isPaused && (
                 <>
-                  <Button onClick={handleResumeTask} className="bg-info text-info-foreground hover:bg-info/90 font-semibold shadow-lg shadow-info/20">
+                  <Button
+                    onClick={handleResumeTask}
+                    className="bg-info text-info-foreground hover:bg-info/90 font-semibold shadow-lg shadow-info/20"
+                  >
                     <Play className="h-4 w-4 mr-2" /> Retomar Trabalho
                   </Button>
-                  <Button onClick={handleSendToReview} className="bg-warning text-warning-foreground hover:bg-warning/90 font-semibold">
+                  <Button
+                    onClick={handleSendToReview}
+                    className="bg-warning text-warning-foreground hover:bg-warning/90 font-semibold"
+                  >
                     Enviar para Revisão
                   </Button>
-                  <Button onClick={handleCompleteTask} className="bg-gradient-ember text-white shadow-ember">
+                  <Button
+                    onClick={handleCompleteTask}
+                    className="bg-gradient-ember text-white shadow-ember"
+                  >
                     Concluir Tarefa
                   </Button>
                 </>
@@ -585,17 +651,25 @@ function TaskDashboardPage() {
                 <>
                   {isSupervisor ? (
                     <>
-                      <Button onClick={handleCompleteTask} className="bg-success text-success-foreground hover:bg-success/90 font-semibold shadow-lg shadow-success/20">
+                      <Button
+                        onClick={handleCompleteTask}
+                        className="bg-success text-success-foreground hover:bg-success/90 font-semibold shadow-lg shadow-success/20"
+                      >
                         <Check className="h-4 w-4 mr-2" /> Aprovar e Concluir
                       </Button>
-                      <Button onClick={handleRejectTask} className="bg-destructive text-white hover:bg-destructive/90 font-semibold">
+                      <Button
+                        onClick={handleRejectTask}
+                        className="bg-destructive text-white hover:bg-destructive/90 font-semibold"
+                      >
                         <RotateCcw className="h-4 w-4 mr-2" /> Recusar (Voltar a Em Andamento)
                       </Button>
                     </>
                   ) : (
                     <div className="flex items-center gap-2 text-warning bg-warning/10 border border-warning/20 p-3 rounded-xl w-full">
                       <AlertCircle className="h-5 w-5 shrink-0" />
-                      <span className="text-xs">A tarefa está em revisão. Aguardando aprovação do supervisor.</span>
+                      <span className="text-xs">
+                        A tarefa está em revisão. Aguardando aprovação do supervisor.
+                      </span>
                     </div>
                   )}
                 </>
@@ -691,12 +765,18 @@ function TaskDashboardPage() {
                         </Pie>
                         <Tooltip
                           formatter={(value: number) => formatDurationText(value)}
-                          contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }}
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute flex flex-col items-center justify-center">
-                      <span className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">Ativo</span>
+                      <span className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">
+                        Ativo
+                      </span>
                       <span className="text-sm font-black text-foreground">{stats.activePct}%</span>
                     </div>
                   </div>
@@ -733,10 +813,13 @@ function TaskDashboardPage() {
                   <div key={i} className="relative">
                     {/* Circle icon */}
                     <span className="absolute -left-[26px] top-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-purple-500 ring-4 ring-card" />
-                    
+
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <div className="text-xs font-semibold text-foreground">
-                        Pausa #{i + 1}: <span className="text-purple-400 font-bold">{interval.reason || "Intervalo geral"}</span>
+                        Pausa #{i + 1}:{" "}
+                        <span className="text-purple-400 font-bold">
+                          {interval.reason || "Intervalo geral"}
+                        </span>
                       </div>
                       <div className="text-[10px] text-muted-foreground font-medium bg-surface px-2 py-0.5 rounded border border-border/40">
                         {getIntervalDurationText(interval)}
@@ -748,7 +831,10 @@ function TaskDashboardPage() {
                       {interval.resumed_at ? (
                         ` · Retomado em ${new Date(interval.resumed_at).toLocaleString("pt-BR")}`
                       ) : (
-                        <span className="text-purple-400 font-semibold animate-pulse"> (Ativo no momento)</span>
+                        <span className="text-purple-400 font-semibold animate-pulse">
+                          {" "}
+                          (Ativo no momento)
+                        </span>
                       )}
                     </div>
                   </div>
@@ -766,19 +852,25 @@ function TaskDashboardPage() {
         <div className="space-y-6">
           {/* Card 4: Metadata details */}
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Ficha Técnica</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Ficha Técnica
+            </h3>
 
             <div className="space-y-3.5">
               {/* Assignee */}
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">Responsável</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">
+                    Responsável
+                  </div>
                   <div className="text-sm font-semibold text-foreground mt-1">
                     {assigneeProfile?.name || "Não atribuído"}
                   </div>
                   {assigneeProfile?.badge && (
-                    <span className="text-[10px] text-muted-foreground">{assigneeProfile.badge}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {assigneeProfile.badge}
+                    </span>
                   )}
                 </div>
               </div>
@@ -787,7 +879,9 @@ function TaskDashboardPage() {
               <div className="flex items-start gap-3">
                 <Wrench className="h-5 w-5 text-info shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">Equipamento</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">
+                    Equipamento
+                  </div>
                   <div className="text-sm font-semibold text-foreground mt-1">
                     {machineObj ? `${machineObj.code} — ${machineObj.name}` : "Nenhum cadastrado"}
                   </div>
@@ -798,7 +892,9 @@ function TaskDashboardPage() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">Data de Criação</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">
+                    Data de Criação
+                  </div>
                   <div className="text-sm font-semibold text-foreground mt-1">
                     {new Date(task.created_at).toLocaleString("pt-BR")}
                   </div>
@@ -810,7 +906,9 @@ function TaskDashboardPage() {
                 <div className="flex items-start gap-3">
                   <Play className="h-5 w-5 text-info shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">Iniciada em</div>
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">
+                      Iniciada em
+                    </div>
                     <div className="text-sm font-semibold text-foreground mt-1">
                       {new Date(task.started_at).toLocaleString("pt-BR")}
                     </div>
@@ -823,7 +921,9 @@ function TaskDashboardPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">Concluída em</div>
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground leading-none">
+                      Concluída em
+                    </div>
                     <div className="text-sm font-semibold text-foreground mt-1">
                       {new Date(task.completed_at).toLocaleString("pt-BR")}
                     </div>
@@ -854,7 +954,12 @@ function TaskDashboardPage() {
                 <MessageSquare className="h-4 w-4 text-info" /> Observações Operacionais
               </h3>
               {!notesEditing && canManage && (
-                <Button size="sm" variant="ghost" onClick={() => setNotesEditing(true)} className="text-xs h-7">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setNotesEditing(true)}
+                  className="text-xs h-7"
+                >
                   Editar
                 </Button>
               )}
@@ -869,10 +974,14 @@ function TaskDashboardPage() {
                   rows={4}
                 />
                 <div className="flex items-center gap-2 justify-end">
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setNewNotes(task.notes || "");
-                    setNotesEditing(false);
-                  }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setNewNotes(task.notes || "");
+                      setNotesEditing(false);
+                    }}
+                  >
                     Cancelar
                   </Button>
                   <Button
@@ -890,7 +999,9 @@ function TaskDashboardPage() {
                 {task.notes ? (
                   <FormattedText text={task.notes} />
                 ) : (
-                  <span className="text-muted-foreground italic text-[11px]">Nenhuma observação operacional registrada.</span>
+                  <span className="text-muted-foreground italic text-[11px]">
+                    Nenhuma observação operacional registrada.
+                  </span>
                 )}
               </div>
             )}
@@ -905,10 +1016,22 @@ function TaskDashboardPage() {
 
               {canManage && (
                 <div className="flex gap-1.5">
-                  <Button size="sm" variant="outline" onClick={handleTakePhoto} className="text-xs p-2 h-7" disabled={uploading}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleTakePhoto}
+                    className="text-xs p-2 h-7"
+                    disabled={uploading}
+                  >
                     <Camera className="h-3.5 w-3.5" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handlePickPhotos} className="text-xs p-2 h-7" disabled={uploading}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handlePickPhotos}
+                    className="text-xs p-2 h-7"
+                    disabled={uploading}
+                  >
                     <ImageIcon className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -925,8 +1048,15 @@ function TaskDashboardPage() {
             {photoList.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
                 {photoList.map((url, index) => (
-                  <div key={index} className="relative group rounded-xl overflow-hidden border border-border/40 aspect-video bg-surface">
-                    <img src={url} alt={`Evidência ${index + 1}`} className="w-full h-full object-cover" />
+                  <div
+                    key={index}
+                    className="relative group rounded-xl overflow-hidden border border-border/40 aspect-video bg-surface"
+                  >
+                    <img
+                      src={url}
+                      alt={`Evidência ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                     {canManage && (
                       <button
                         onClick={() => handleDeletePhoto(url)}
@@ -990,7 +1120,10 @@ function TaskDashboardPage() {
             <Button variant="ghost" onClick={() => setPauseDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleConfirmPause} className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Button
+              onClick={handleConfirmPause}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
               Confirmar Pausa
             </Button>
           </DialogFooter>

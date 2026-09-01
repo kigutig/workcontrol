@@ -46,7 +46,7 @@ updates:
           - "patch"
     ignore:
       - dependency-name: "nitro"
-        versions: ["*"]  # Managed by lovable config
+        versions: ["*"] # Managed by lovable config
 
   # ─── GitHub Actions ────────────────────────────────────────────
   - package-ecosystem: "github-actions"

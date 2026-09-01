@@ -1,4 +1,11 @@
-export const TASK_TYPES = ["Montagem", "Pintura", "Limpeza", "Manutenção", "Embalagem", "Cadastro"] as const;
+export const TASK_TYPES = [
+  "Montagem",
+  "Pintura",
+  "Limpeza",
+  "Manutenção",
+  "Embalagem",
+  "Cadastro",
+] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
 export const STATUS = [
@@ -21,22 +28,33 @@ export type Priority = (typeof PRIORITIES)[number];
 
 export function priorityTone(p: string) {
   switch (p) {
-    case "Urgente": return "bg-destructive/15 text-destructive border-destructive/30";
-    case "Alta": return "bg-primary/15 text-primary border-primary/30";
-    case "Baixa": return "bg-muted text-muted-foreground border-border";
-    default: return "bg-info/10 text-info border-info/20";
+    case "Urgente":
+      return "bg-destructive/15 text-destructive border-destructive/30";
+    case "Alta":
+      return "bg-primary/15 text-primary border-primary/30";
+    case "Baixa":
+      return "bg-muted text-muted-foreground border-border";
+    default:
+      return "bg-info/10 text-info border-info/20";
   }
 }
 
 export function typeIcon(t: string): string {
   switch (t) {
-    case "Montagem": return "🔧";
-    case "Pintura": return "🎨";
-    case "Limpeza": return "🧽";
-    case "Manutenção": return "🛠️";
-    case "Embalagem": return "📦";
-    case "Cadastro": return "📝";
-    default: return "⚙️";
+    case "Montagem":
+      return "🔧";
+    case "Pintura":
+      return "🎨";
+    case "Limpeza":
+      return "🧽";
+    case "Manutenção":
+      return "🛠️";
+    case "Embalagem":
+      return "📦";
+    case "Cadastro":
+      return "📝";
+    default:
+      return "⚙️";
   }
 }
 
@@ -50,7 +68,10 @@ export function parsePhotoUrls(photo_url: string | null | undefined): string[] {
       // Fallback below
     }
   }
-  return photo_url.split(",").map((s) => s.trim()).filter(Boolean);
+  return photo_url
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export function formatPhotoUrls(urls: string[]): string | null {
@@ -86,7 +107,7 @@ export function getWorkHoursOverlap(start: Date, end: Date): number {
     const overlapEnd = Math.min(endMs, workEnd.getTime());
 
     if (overlapStart < overlapEnd) {
-      totalOverlap += (overlapEnd - overlapStart);
+      totalOverlap += overlapEnd - overlapStart;
     }
 
     current.setDate(current.getDate() + 1);
@@ -106,7 +127,7 @@ export function calculateTaskTimings(
     status: string;
     intervals?: TaskInterval[] | null;
   },
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
 ) {
   if (!task.started_at) {
     return { activeMs: 0, pausedMs: 0, totalMs: 0, activePct: 0, pausedPct: 0 };
@@ -123,7 +144,9 @@ export function calculateTaskTimings(
       const pStart = new Date(interval.paused_at);
       const pEnd = interval.resumed_at
         ? new Date(interval.resumed_at)
-        : (task.status === "paused" ? new Date(nowMs) : pStart);
+        : task.status === "paused"
+          ? new Date(nowMs)
+          : pStart;
 
       const duration = getWorkHoursOverlap(pStart, pEnd);
       if (duration > 0) pausedMs += duration;
@@ -149,7 +172,7 @@ export function checkNeedsAutoPause(
     status: string;
     intervals?: TaskInterval[] | null;
   },
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
 ): { needsPause: boolean; pausedAtIso?: string; newIntervals?: TaskInterval[] } {
   if (task.status !== "progress") {
     return { needsPause: false };

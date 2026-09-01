@@ -8,7 +8,6 @@ import "@testing-library/jest-dom";
 import { vi, beforeAll, afterAll, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-
 // ─── Auto cleanup after each test ───────────────────────────────
 afterEach(() => {
   cleanup();
@@ -124,11 +123,7 @@ beforeAll(() => {
   vi.spyOn(console, "error").mockImplementation((...args) => {
     // Allow errors that aren't React warnings or test noise
     const msg = args[0]?.toString() || "";
-    if (
-      !msg.includes("Warning:") &&
-      !msg.includes("act(") &&
-      !msg.includes("ReactDOM.render")
-    ) {
+    if (!msg.includes("Warning:") && !msg.includes("act(") && !msg.includes("ReactDOM.render")) {
       console.warn("[Test Error Suppressed]:", ...args);
     }
   });

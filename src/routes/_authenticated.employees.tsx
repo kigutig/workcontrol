@@ -22,7 +22,13 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TaskDetailModal, type TaskDetail } from "@/components/task-detail-modal";
 import { typeIcon, priorityTone, STATUS } from "@/lib/task-utils";
 import { cn } from "@/lib/utils";
@@ -45,7 +51,10 @@ export const Route = createFileRoute("/_authenticated/employees")({
   head: () => ({
     meta: [
       { title: "Funcionários & Produtividade — FitControl" },
-      { name: "description", content: "Acompanhe as tarefas, produtividade e calendário de atividades da equipe." },
+      {
+        name: "description",
+        content: "Acompanhe as tarefas, produtividade e calendário de atividades da equipe.",
+      },
     ],
   }),
   component: EmployeesPage,
@@ -63,8 +72,18 @@ type EmployeeProfile = {
 type PresetRange = "all" | "today" | "week" | "month" | "day";
 
 const MONTHS_PT = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 const YEARS = [2024, 2025, 2026, 2027];
@@ -79,12 +98,12 @@ const WEEKS_PT = [
 
 function EmployeesPage() {
   const { isSupervisor } = useAuth();
-  
+
   // State variables
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeProfile | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  
+
   // Time range filters
   const [timeRange, setTimeRange] = useState<PresetRange>("all");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -103,7 +122,9 @@ function EmployeesPage() {
         <div className="grid place-items-center py-24 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h3 className="font-display text-xl font-bold">Acesso restrito</h3>
-          <p className="text-muted-foreground mt-1">Apenas supervisores e administradores podem ver a produtividade da equipe.</p>
+          <p className="text-muted-foreground mt-1">
+            Apenas supervisores e administradores podem ver a produtividade da equipe.
+          </p>
         </div>
       </AppShell>
     );
@@ -113,10 +134,12 @@ function EmployeesPage() {
   const { data: employees = [], isLoading: isLoadingEmployees } = useQuery({
     queryKey: ["employees-list"],
     queryFn: async () => {
-      const [{ data: profiles, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all([
-        supabase.from("profiles").select("*").order("name", { ascending: true }),
-        supabase.from("user_roles").select("*"),
-      ]);
+      const [{ data: profiles, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all(
+        [
+          supabase.from("profiles").select("*").order("name", { ascending: true }),
+          supabase.from("user_roles").select("*"),
+        ],
+      );
 
       if (pErr) throw pErr;
       if (rErr) throw rErr;
@@ -139,7 +162,9 @@ function EmployeesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tasks")
-        .select("id,title,type,status,priority,description,assignee_id,machine_id,photo_url,notes,created_at,completed_at,started_at")
+        .select(
+          "id,title,type,status,priority,description,assignee_id,machine_id,photo_url,notes,created_at,completed_at,started_at",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -184,11 +209,11 @@ function EmployeesPage() {
   const isTaskInPeriod = (task: any) => {
     const taskDate = new Date(task.completed_at || task.created_at);
     const today = new Date();
-    
+
     if (timeRange === "today") {
       return taskDate.toDateString() === today.toDateString();
     }
-    
+
     if (timeRange === "week") {
       if (taskDate.getMonth() !== selectedMonth || taskDate.getFullYear() !== selectedYear) {
         return false;
@@ -201,15 +226,15 @@ function EmployeesPage() {
       if (selectedWeek === 5) return day >= 29;
       return true;
     }
-    
+
     if (timeRange === "month") {
       return taskDate.getMonth() === selectedMonth && taskDate.getFullYear() === selectedYear;
     }
-    
+
     if (timeRange === "day") {
       return taskDate.toDateString() === selectedDate.toDateString();
     }
-    
+
     return true; // "all"
   };
 
@@ -219,9 +244,9 @@ function EmployeesPage() {
       const matchesSearch =
         e.name.toLowerCase().includes(search.toLowerCase()) ||
         e.badge.toLowerCase().includes(search.toLowerCase());
-      
+
       const matchesRole = roleFilter === "all" || e.role === roleFilter;
-      
+
       return matchesSearch && matchesRole;
     });
   }, [employees, search, roleFilter]);
@@ -238,16 +263,16 @@ function EmployeesPage() {
   const employeeStats = useMemo(() => {
     if (!selectedEmployee) return null;
     const allUserTasks = tasksByAssignee.get(selectedEmployee.id) ?? [];
-    
+
     // Filter by active timeRange / calendar selection
     const periodTasks = allUserTasks.filter(isTaskInPeriod);
-    
+
     const total = periodTasks.length;
     const completed = periodTasks.filter((t) => t.status === "done").length;
     const inProgress = periodTasks.filter((t) => t.status === "progress").length;
     const pending = periodTasks.filter((t) => t.status === "pending").length;
     const review = periodTasks.filter((t) => t.status === "review").length;
-    
+
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     // Chart 1: Operation type count
@@ -273,15 +298,15 @@ function EmployeesPage() {
     periodTasks.forEach((t) => {
       priorityMap[t.priority] = (priorityMap[t.priority] || 0) + 1;
     });
-    const priorityData = ["Urgente", "Alta", "Normal", "Baixa"].map((p) => ({
-      name: p,
-      value: priorityMap[p] || 0,
-    })).filter((p) => p.value > 0);
+    const priorityData = ["Urgente", "Alta", "Normal", "Baixa"]
+      .map((p) => ({
+        name: p,
+        value: priorityMap[p] || 0,
+      }))
+      .filter((p) => p.value > 0);
 
     // Chart 4: Average time per task type (completed tasks)
-    const completedTasksList = periodTasks.filter(
-      (t) => t.status === "done" && t.completed_at
-    );
+    const completedTasksList = periodTasks.filter((t) => t.status === "done" && t.completed_at);
     const avgTimeMap: Record<string, { sum: number; count: number }> = {};
     completedTasksList.forEach((t) => {
       const start = new Date(t.started_at || t.created_at).getTime();
@@ -318,13 +343,22 @@ function EmployeesPage() {
       priorityData,
       avgTimeChartData,
     };
-  }, [selectedEmployee, tasksByAssignee, timeRange, selectedDate, machines, selectedMonth, selectedYear, selectedWeek]);
+  }, [
+    selectedEmployee,
+    tasksByAssignee,
+    timeRange,
+    selectedDate,
+    machines,
+    selectedMonth,
+    selectedYear,
+    selectedWeek,
+  ]);
 
   // Productivity timeline evolution (Area Chart over the last 15 days)
   const productivityEvolutionData = useMemo(() => {
     if (!selectedEmployee) return [];
     const allUserTasks = tasksByAssignee.get(selectedEmployee.id) ?? [];
-    
+
     const days = [];
     const today = new Date();
     for (let i = 14; i >= 0; i--) {
@@ -332,7 +366,7 @@ function EmployeesPage() {
       d.setDate(today.getDate() - i);
       days.push(d);
     }
-    
+
     return days.map((day) => {
       const dateStr = day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
       const completedCount = allUserTasks.filter((t) => {
@@ -340,7 +374,7 @@ function EmployeesPage() {
         const compDate = new Date(t.completed_at);
         return compDate.toDateString() === day.toDateString();
       }).length;
-      
+
       return {
         date: dateStr,
         Concluídas: completedCount,
@@ -394,7 +428,7 @@ function EmployeesPage() {
                 Admins
               </Button>
             </div>
-            
+
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -410,8 +444,13 @@ function EmployeesPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEmployees.map((e) => {
               const stats = getSummaryStats(e.id);
-              const initials = e.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-              
+              const initials = e.name
+                .split(" ")
+                .map((w) => w[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase();
+
               return (
                 <div
                   key={e.id}
@@ -431,12 +470,14 @@ function EmployeesPage() {
                           {e.name}
                         </h4>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={cn(
-                            "inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border shrink-0",
-                            e.role === "admin" && "bg-primary/10 text-primary border-primary/20",
-                            e.role === "supervisor" && "bg-info/10 text-info border-info/20",
-                            e.role === "worker" && "bg-muted text-muted-foreground border-border"
-                          )}>
+                          <span
+                            className={cn(
+                              "inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border shrink-0",
+                              e.role === "admin" && "bg-primary/10 text-primary border-primary/20",
+                              e.role === "supervisor" && "bg-info/10 text-info border-info/20",
+                              e.role === "worker" && "bg-muted text-muted-foreground border-border",
+                            )}
+                          >
                             {e.role === "admin" && "Admin"}
                             {e.role === "supervisor" && "Supervisor"}
                             {e.role === "worker" && e.badge}
@@ -447,16 +488,28 @@ function EmployeesPage() {
 
                     <div className="grid grid-cols-3 gap-2 mt-5 text-center bg-muted/30 border border-border/40 rounded-xl p-3">
                       <div>
-                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Total</span>
-                        <span className="text-base font-bold tabular-nums text-foreground">{stats.total}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold">
+                          Total
+                        </span>
+                        <span className="text-base font-bold tabular-nums text-foreground">
+                          {stats.total}
+                        </span>
                       </div>
                       <div className="border-x border-border/50">
-                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold text-info">Ativo</span>
-                        <span className="text-base font-bold tabular-nums text-info">{stats.progress}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold text-info">
+                          Ativo
+                        </span>
+                        <span className="text-base font-bold tabular-nums text-info">
+                          {stats.progress}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold text-success">Feito</span>
-                        <span className="text-base font-bold tabular-nums text-success">{stats.completed}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase block font-semibold text-success">
+                          Feito
+                        </span>
+                        <span className="text-base font-bold tabular-nums text-success">
+                          {stats.completed}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -473,7 +526,9 @@ function EmployeesPage() {
               <div className="col-span-full rounded-2xl border border-dashed border-border/60 p-16 text-center">
                 <Briefcase className="h-12 w-12 text-primary mx-auto mb-3" />
                 <h3 className="font-display text-xl font-bold">Nenhum funcionário encontrado</h3>
-                <p className="text-muted-foreground mt-1">Busque com outro termo ou ajuste os filtros.</p>
+                <p className="text-muted-foreground mt-1">
+                  Busque com outro termo ou ajuste os filtros.
+                </p>
               </div>
             )}
           </div>
@@ -493,7 +548,7 @@ function EmployeesPage() {
             >
               <ChevronLeft className="h-4 w-4" /> Voltar para a lista
             </Button>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -503,12 +558,16 @@ function EmployeesPage() {
               >
                 <Printer className="h-3.5 w-3.5" /> Exportar PDF / Imprimir
               </Button>
-              <span className={cn(
-                "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
-                selectedEmployee.role === "admin" && "bg-primary/10 text-primary border-primary/20",
-                selectedEmployee.role === "supervisor" && "bg-info/10 text-info border-info/20",
-                selectedEmployee.role === "worker" && "bg-muted text-muted-foreground border-border"
-              )}>
+              <span
+                className={cn(
+                  "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
+                  selectedEmployee.role === "admin" &&
+                    "bg-primary/10 text-primary border-primary/20",
+                  selectedEmployee.role === "supervisor" && "bg-info/10 text-info border-info/20",
+                  selectedEmployee.role === "worker" &&
+                    "bg-muted text-muted-foreground border-border",
+                )}
+              >
                 {selectedEmployee.role === "admin" && "Administrador"}
                 {selectedEmployee.role === "supervisor" && "Supervisor"}
                 {selectedEmployee.role === "worker" && selectedEmployee.badge}
@@ -522,14 +581,22 @@ function EmployeesPage() {
               📋 Relatório de Desempenho Operacional
             </h2>
             <p className="text-sm font-semibold text-foreground mt-1">
-              Funcionário: {selectedEmployee.name} ({selectedEmployee.role === "admin" ? "Administrador" : selectedEmployee.role === "supervisor" ? "Supervisor" : selectedEmployee.badge})
+              Funcionário: {selectedEmployee.name} (
+              {selectedEmployee.role === "admin"
+                ? "Administrador"
+                : selectedEmployee.role === "supervisor"
+                  ? "Supervisor"
+                  : selectedEmployee.badge}
+              )
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Período: {timeRange === "all" && "Todo o Período (Geral)"}
               {timeRange === "today" && "Hoje"}
-              {timeRange === "week" && `Semana ${selectedWeek} de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
+              {timeRange === "week" &&
+                `Semana ${selectedWeek} de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
               {timeRange === "month" && `Mês de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
-              {timeRange === "day" && `Dia Selecionado: ${selectedDate.toLocaleDateString("pt-BR")}`}
+              {timeRange === "day" &&
+                `Dia Selecionado: ${selectedDate.toLocaleDateString("pt-BR")}`}
               {` · Gerado em ${new Date().toLocaleString("pt-BR")} · FitControl`}
             </p>
           </div>
@@ -538,10 +605,17 @@ function EmployeesPage() {
           <div className="rounded-2xl border border-border/60 bg-card p-6">
             <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
               <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-ember font-display font-bold text-primary-foreground text-xl shadow-ember shrink-0">
-                {selectedEmployee.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                {selectedEmployee.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
               </div>
               <div>
-                <h3 className="font-display text-2xl font-bold text-foreground leading-tight">{selectedEmployee.name}</h3>
+                <h3 className="font-display text-2xl font-bold text-foreground leading-tight">
+                  {selectedEmployee.name}
+                </h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   Cadastrado em: {new Date(selectedEmployee.created_at).toLocaleDateString("pt-BR")}
                 </p>
@@ -559,12 +633,14 @@ function EmployeesPage() {
                 <span className="text-sm font-semibold text-foreground mt-1 block">
                   {timeRange === "all" && "Todo o Período (Geral)"}
                   {timeRange === "today" && "Hoje"}
-                  {timeRange === "week" && `Semana ${selectedWeek} de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
+                  {timeRange === "week" &&
+                    `Semana ${selectedWeek} de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
                   {timeRange === "month" && `Mês de ${MONTHS_PT[selectedMonth]} de ${selectedYear}`}
-                  {timeRange === "day" && `Dia Selecionado no Calendário: ${selectedDate.toLocaleDateString("pt-BR")}`}
+                  {timeRange === "day" &&
+                    `Dia Selecionado no Calendário: ${selectedDate.toLocaleDateString("pt-BR")}`}
                 </span>
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant={timeRange === "all" ? "default" : "outline"}
@@ -606,7 +682,9 @@ function EmployeesPage() {
               <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/40">
                 {timeRange === "week" && (
                   <div className="flex flex-col gap-1.5 min-w-[180px]">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Escolher Semana</span>
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground">
+                      Escolher Semana
+                    </span>
                     <Select
                       value={String(selectedWeek)}
                       onValueChange={(val) => setSelectedWeek(Number(val))}
@@ -626,7 +704,9 @@ function EmployeesPage() {
                 )}
 
                 <div className="flex flex-col gap-1.5 min-w-[150px]">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Escolher Mês</span>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground">
+                    Escolher Mês
+                  </span>
                   <Select
                     value={String(selectedMonth)}
                     onValueChange={(val) => setSelectedMonth(Number(val))}
@@ -645,7 +725,9 @@ function EmployeesPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5 min-w-[100px]">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Escolher Ano</span>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground">
+                    Escolher Ano
+                  </span>
                   <Select
                     value={String(selectedYear)}
                     onValueChange={(val) => setSelectedYear(Number(val))}
@@ -677,13 +759,15 @@ function EmployeesPage() {
                 <span className="text-xs text-muted-foreground">no período selecionado</span>
               </div>
             </div>
-            
+
             <div className="rounded-2xl border border-border/60 bg-card p-5">
               <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider block text-success">
                 Tarefas Concluídas
               </span>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-display font-bold text-success">{employeeStats?.completed}</span>
+                <span className="text-3xl font-display font-bold text-success">
+                  {employeeStats?.completed}
+                </span>
                 <span className="text-xs text-muted-foreground">entregues no prazo</span>
               </div>
             </div>
@@ -705,7 +789,9 @@ function EmployeesPage() {
                 Taxa de Conclusão
               </span>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-display font-bold text-primary">{employeeStats?.rate}%</span>
+                <span className="text-3xl font-display font-bold text-primary">
+                  {employeeStats?.rate}%
+                </span>
                 <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden max-w-20 self-center">
                   <div
                     className="h-full bg-gradient-ember"
@@ -789,7 +875,9 @@ function EmployeesPage() {
                     </ResponsiveContainer>
                     <div className="absolute text-center flex flex-col items-center">
                       <span className="text-xl font-bold font-display">{employeeStats.total}</span>
-                      <span className="text-[9px] text-muted-foreground uppercase font-semibold">Tarefas</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-semibold">
+                        Tarefas
+                      </span>
                     </div>
                   </div>
 
@@ -798,9 +886,14 @@ function EmployeesPage() {
                       const percentage = Math.round((s.value / employeeStats.total) * 100);
                       return (
                         <div key={s.name} className="flex items-center gap-2 text-xs">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: s.color }}
+                          />
                           <span className="text-muted-foreground truncate flex-1">{s.name}</span>
-                          <span className="font-bold text-foreground tabular-nums">{s.value} ({percentage}%)</span>
+                          <span className="font-bold text-foreground tabular-nums">
+                            {s.value} ({percentage}%)
+                          </span>
                         </div>
                       );
                     })}
@@ -863,7 +956,13 @@ function EmployeesPage() {
                         margin={{ left: 15, right: 10 }}
                       >
                         <XAxis type="number" fontSize={10} stroke="#64748b" />
-                        <YAxis dataKey="name" type="category" width={100} fontSize={10} stroke="#64748b" />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={100}
+                          fontSize={10}
+                          stroke="#64748b"
+                        />
                         <Tooltip
                           formatter={(value) => [`${value} horas`, "Tempo Médio"]}
                           contentStyle={{
@@ -897,25 +996,32 @@ function EmployeesPage() {
                   {["Urgente", "Alta", "Normal", "Baixa"].map((priority) => {
                     const found = employeeStats.priorityData.find((p) => p.name === priority);
                     const value = found?.value ?? 0;
-                    const pct = employeeStats.total > 0 ? Math.round((value / employeeStats.total) * 100) : 0;
-                    
+                    const pct =
+                      employeeStats.total > 0 ? Math.round((value / employeeStats.total) * 100) : 0;
+
                     return (
                       <div
                         key={priority}
                         className="bg-muted/40 border border-border/50 rounded-xl p-3 flex flex-col justify-between"
                       >
                         <div className="flex items-center justify-between">
-                          <span className={cn(
-                            "inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border",
-                            priorityTone(priority)
-                          )}>
+                          <span
+                            className={cn(
+                              "inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border",
+                              priorityTone(priority),
+                            )}
+                          >
                             {priority}
                           </span>
-                          <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {pct}%
+                          </span>
                         </div>
                         <div className="mt-3">
                           <span className="text-xl font-bold tabular-nums block">{value}</span>
-                          <span className="text-[9px] text-muted-foreground font-semibold uppercase">Demandas</span>
+                          <span className="text-[9px] text-muted-foreground font-semibold uppercase">
+                            Demandas
+                          </span>
                         </div>
                       </div>
                     );
@@ -926,7 +1032,9 @@ function EmployeesPage() {
           ) : (
             <div className="rounded-2xl border border-dashed border-border/50 py-16 text-center">
               <BarChart2 className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground font-medium">Sem dados analíticos para exibir no período selecionado.</p>
+              <p className="text-sm text-muted-foreground font-medium">
+                Sem dados analíticos para exibir no período selecionado.
+              </p>
             </div>
           )}
 
@@ -938,7 +1046,7 @@ function EmployeesPage() {
                 <CalendarIcon className="h-4 w-4 text-primary" />
                 Navegar por Calendário
               </h4>
-              
+
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -954,7 +1062,8 @@ function EmployeesPage() {
                   hasTasks: (date) => hasTaskOnDay(date),
                 }}
                 modifiersClassNames={{
-                  hasTasks: "border border-primary/40 bg-primary/10 font-bold text-primary hover:bg-primary/20",
+                  hasTasks:
+                    "border border-primary/40 bg-primary/10 font-bold text-primary hover:bg-primary/20",
                 }}
               />
               <div className="mt-3 text-[11px] text-muted-foreground text-center">
@@ -968,22 +1077,25 @@ function EmployeesPage() {
               <h4 className="font-display font-bold text-sm mb-4 flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-primary" />
-                  {timeRange === "day" ? (
-                    `Tarefas em ${selectedDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}`
-                  ) : (
-                    "Lista de Atividades no Período"
-                  )}
+                  {timeRange === "day"
+                    ? `Tarefas em ${selectedDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}`
+                    : "Lista de Atividades no Período"}
                 </span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                  {employeeStats?.periodTasks.length} {employeeStats?.periodTasks.length === 1 ? "tarefa" : "tarefas"}
+                  {employeeStats?.periodTasks.length}{" "}
+                  {employeeStats?.periodTasks.length === 1 ? "tarefa" : "tarefas"}
                 </span>
               </h4>
 
               {employeeStats && employeeStats.periodTasks.length === 0 ? (
                 <div className="text-center py-16 border border-dashed border-border/50 rounded-xl my-auto">
                   <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground font-medium">Nenhuma atividade registrada neste período.</p>
-                  <p className="text-xs text-muted-foreground/80 mt-0.5">Selecione outro período ou dia no calendário.</p>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Nenhuma atividade registrada neste período.
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5">
+                    Selecione outro período ou dia no calendário.
+                  </p>
                 </div>
               ) : (
                 <div className="divide-y divide-border/40 overflow-y-auto max-h-96 pr-1 print:max-h-none print:overflow-visible">
@@ -1000,17 +1112,34 @@ function EmployeesPage() {
                       >
                         <span className="text-2xl">{typeIcon(t.type)}</span>
                         <div className="min-w-0">
-                          <div className="truncate font-semibold text-foreground text-sm leading-snug">{t.title}</div>
+                          <div className="truncate font-semibold text-foreground text-sm leading-snug">
+                            {t.title}
+                          </div>
                           <div className="text-[10px] text-muted-foreground mt-0.5">
-                            {t.type} · Criada às {new Date(t.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                            {t.completed_at && ` · Concluída às ${new Date(t.completed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+                            {t.type} · Criada às{" "}
+                            {new Date(t.created_at).toLocaleTimeString("pt-BR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {t.completed_at &&
+                              ` · Concluída às ${new Date(t.completed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border", priorityTone(t.priority))}>
+                          <span
+                            className={cn(
+                              "inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border",
+                              priorityTone(t.priority),
+                            )}
+                          >
                             {t.priority}
                           </span>
-                          <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border", st?.tone)}>
+                          <span
+                            className={cn(
+                              "inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border",
+                              st?.tone,
+                            )}
+                          >
                             {st?.label || t.status}
                           </span>
                         </div>
@@ -1025,11 +1154,7 @@ function EmployeesPage() {
       )}
 
       {/* Task Details Modal integration */}
-      <TaskDetailModal
-        task={selectedTask}
-        open={taskDetailOpen}
-        onOpenChange={setTaskDetailOpen}
-      />
+      <TaskDetailModal task={selectedTask} open={taskDetailOpen} onOpenChange={setTaskDetailOpen} />
     </AppShell>
   );
 }

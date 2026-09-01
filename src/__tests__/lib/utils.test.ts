@@ -39,11 +39,10 @@ describe("cn (classname utility)", () => {
   });
 
   it("handles complex combinations", () => {
-    const result = cn(
-      "base-class",
-      { "is-active": true, "is-disabled": false },
-      ["extra-a", "extra-b"],
-    );
+    const result = cn("base-class", { "is-active": true, "is-disabled": false }, [
+      "extra-a",
+      "extra-b",
+    ]);
     expect(result).toContain("base-class");
     expect(result).toContain("is-active");
     expect(result).toContain("extra-a");

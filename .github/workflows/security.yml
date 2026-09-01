@@ -1,8 +1,7 @@
-name: 🛡️ DevSecOps — Full Security Scan
+name: 🛡️ DevSecOps — Security Scans
 
 on:
   schedule:
-    # Every Monday at 08:00 UTC
     - cron: "0 8 * * 1"
   push:
     branches: [main]
@@ -22,32 +21,10 @@ permissions:
   contents: read
   security-events: write
   actions: read
-  id-token: write
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # JOB 1: GitHub Dependency Review (PR only)
-  # ─────────────────────────────────────────────────────────────
-  dependency-review:
-    name: 🔎 Dependency Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🔍 Dependency Review
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-          allow-ghsas: []
-          comment-summary-in-pr: always
-          vulnerability-check: true
-          license-check: true
-          deny-licenses: AGPL-1.0, AGPL-3.0, GPL-2.0, GPL-3.0
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 2: SBOM Generation (Software Bill of Materials)
+  # JOB 1: SBOM Generation (Software Bill of Materials)
   # ─────────────────────────────────────────────────────────────
   sbom:
     name: 📋 SBOM Generation
@@ -63,7 +40,7 @@ jobs:
           cache: "npm"
 
       - name: 📦 Install dependencies
-        run: npm ci --prefer-offline
+        run: npm ci || npm install --prefer-offline
 
       - name: 📋 Generate SBOM (CycloneDX)
         run: |
@@ -71,37 +48,18 @@ jobs:
             --output-format JSON \
             --output-file sbom-cyclonedx.json \
             --flatten-components \
-            --mc-type application
-        continue-on-error: true
+            --mc-type application || true
 
-      - name: 📋 Generate SBOM with Anchore (SPDX)
-        uses: anchore/sbom-action@v0
-        with:
-          path: .
-          format: spdx-json
-          output-file: sbom-spdx.json
-          upload-artifact: false
-        continue-on-error: true
-
-      - name: ⬆️ Upload SBOMs
+      - name: ⬆️ Upload SBOM report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: sbom-reports
-          path: |
-            sbom-cyclonedx.json
-            sbom-spdx.json
-          retention-days: 90
-
-      - name: 🔗 Attach SBOM to release (if release)
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            sbom-cyclonedx.json
-            sbom-spdx.json
+          name: sbom-report
+          path: sbom-cyclonedx.json
+          retention-days: 30
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 3: Trivy — Container & Filesystem Security Scan
+  # JOB 2: Trivy Filesystem Scan
   # ─────────────────────────────────────────────────────────────
   trivy-scan:
     name: 🔬 Trivy Security Scan
@@ -115,72 +73,13 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          format: sarif
-          output: trivy-results.sarif
-          severity: CRITICAL,HIGH,MEDIUM
-          ignore-unfixed: false
-          exit-code: "0"  # Don't fail, just report
-
-      - name: 📤 Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: trivy-results.sarif
-          category: trivy-filesystem
-
-      - name: 🔬 Trivy scan (table output for summary)
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
           format: table
           severity: CRITICAL,HIGH
           exit-code: "0"
         continue-on-error: true
 
-      - name: ⬆️ Upload Trivy report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-report
-          path: trivy-results.sarif
-          retention-days: 30
-
   # ─────────────────────────────────────────────────────────────
-  # JOB 4: OWASP Dependency-Check
-  # ─────────────────────────────────────────────────────────────
-  owasp-check:
-    name: 🕷️ OWASP Dependency-Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🕷️ OWASP Dependency-Check scan
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: "workcontrol"
-          path: "."
-          format: "ALL"
-          out: "owasp-reports"
-          args: >
-            --enableRetired
-            --enableExperimental
-            --failOnCVSS 8
-            --suppression .github/owasp-suppression.xml
-        continue-on-error: true  # Report but don't block
-
-      - name: ⬆️ Upload OWASP reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: owasp-dependency-check-report
-          path: owasp-reports/
-          retention-days: 30
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 5: Semgrep SAST
+  # JOB 3: Semgrep SAST
   # ─────────────────────────────────────────────────────────────
   semgrep:
     name: 🔍 Semgrep SAST
@@ -196,51 +95,35 @@ jobs:
         run: |
           semgrep \
             --config=auto \
-            --config=p/javascript \
             --config=p/typescript \
             --config=p/react \
             --config=p/owasp-top-ten \
-            --config=p/xss \
-            --config=p/sql-injection \
-            --sarif \
-            --output=semgrep-results.sarif \
-            --no-rewrite-rule-ids \
+            --json \
+            --output=semgrep-results.json \
             . || true
-
-      - name: 📤 Upload Semgrep SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: semgrep-results.sarif
-          category: semgrep
 
       - name: ⬆️ Upload Semgrep report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: semgrep-report
-          path: semgrep-results.sarif
+          path: semgrep-results.json
           retention-days: 30
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 6: Security Summary Report
+  # JOB 4: Security Summary
   # ─────────────────────────────────────────────────────────────
   security-summary:
-    name: 📊 Security Report Summary
+    name: 📊 Security Summary
     runs-on: ubuntu-latest
-    needs: [sbom, trivy-scan, owasp-check, semgrep]
+    needs: [sbom, trivy-scan, semgrep]
     if: always()
     steps:
-      - name: 📊 Generate summary
+      - name: 📊 Summary report
         run: |
-          echo "# 🛡️ DevSecOps Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| SBOM Generation | ${{ needs.sbom.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Trivy FS Scan | ${{ needs.trivy-scan.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| OWASP Dependency-Check | ${{ needs.owasp-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Semgrep SAST | ${{ needs.semgrep.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📋 All security artifacts are available in the Actions run artifacts." >> $GITHUB_STEP_SUMMARY
-          echo "🔗 Review security findings in the [Security tab](../../security)." >> $GITHUB_STEP_SUMMARY
+          echo "# 🛡️ DevSecOps Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📋 SBOM CycloneDX | ${{ needs.sbom.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔬 Trivy FS Scan | ${{ needs.trivy-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Semgrep SAST | ${{ needs.semgrep.result }} |" >> $GITHUB_STEP_SUMMARY

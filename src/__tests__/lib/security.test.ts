@@ -112,7 +112,7 @@ describe("isValidEmail", () => {
 describe("isValidUUID", () => {
   it("validates correct UUIDs v4", () => {
     // These are valid UUID v4 (3rd group starts with 4, 4th with 8/9/a/b)
-    expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(true);  // 4th group = a716 ✓
+    expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(true); // 4th group = a716 ✓
     expect(isValidUUID("f47ac10b-58cc-4372-a567-0e02b2c3d479")).toBe(true);
     expect(isValidUUID("a8098c1a-f86e-4fbf-8a4c-e2f6f2a9b7c1")).toBe(true);
   });
@@ -130,7 +130,6 @@ describe("isValidUUID", () => {
     expect(isValidUUID("123e4567-e89b-12d3-a456-42661417400")).toBe(false); // too short
   });
 });
-
 
 // ─── isSafeUrl ──────────────────────────────────────────────────
 describe("isSafeUrl", () => {

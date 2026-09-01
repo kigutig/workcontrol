@@ -16,6 +16,7 @@
 ## ✅ Checklist
 
 ### Qualidade
+
 - [ ] Código passa em `npm run lint` sem warnings
 - [ ] TypeScript sem erros (`tsc --noEmit`)
 - [ ] Testes unitários passam (`npm run test`)
@@ -23,12 +24,14 @@
 - [ ] Código segue os padrões do projeto
 
 ### Segurança
+
 - [ ] Nenhum secret ou credencial foi commitado
 - [ ] Inputs do usuário são validados/sanitizados
 - [ ] Não há vulnerabilidades conhecidas nas dependências adicionadas
 - [ ] RLS do Supabase foi considerado para mudanças no banco
 
 ### Funcionalidade
+
 - [ ] Testado localmente
 - [ ] Preview deploy funcionando corretamente
 - [ ] Mudanças de UI testadas em mobile (responsivo)

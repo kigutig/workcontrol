@@ -125,7 +125,9 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
         if (photo.webPath) {
           const response = await fetch(photo.webPath);
           const blob = await response.blob();
-          files.push(new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }));
+          files.push(
+            new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }),
+          );
         }
       }
       return files;
@@ -181,7 +183,8 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["profiles"],
-    queryFn: async () => (await supabase.from("profiles").select("id,name,avatar_url,badge")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("profiles").select("id,name,avatar_url,badge")).data ?? [],
   });
 
   const { data: machines = [] } = useQuery({
@@ -209,7 +212,8 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
   const assigneeProfile = profiles.find((p) => p.id === task?.assignee_id);
   const machineObj = machines.find((m) => m.id === task?.machine_id);
   const currentStatusObj = STATUS.find((s) => s.id === task?.status);
-  const canManage = isSupervisor || isAdmin || task?.assignee_id === user?.id || task?.created_by === user?.id;
+  const canManage =
+    isSupervisor || isAdmin || task?.assignee_id === user?.id || task?.created_by === user?.id;
 
   const existingPhotos = parsePhotoUrls(task?.photo_url);
 
@@ -259,7 +263,10 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
         patch.intervals = [];
       }
 
-      const { error } = await supabase.from("tasks").update(patch as never).eq("id", task.id);
+      const { error } = await supabase
+        .from("tasks")
+        .update(patch as never)
+        .eq("id", task.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -278,7 +285,7 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
       const resolvedMachineId = await resolveOrCreateMachine(
         editMachine,
         editMachineCode,
-        editMachineName
+        editMachineName,
       );
 
       const { error } = await supabase
@@ -360,7 +367,9 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
           continue;
         }
 
-        const { data: signed } = await supabase.storage.from("evidence").createSignedUrl(path, 60 * 60 * 24 * 30);
+        const { data: signed } = await supabase.storage
+          .from("evidence")
+          .createSignedUrl(path, 60 * 60 * 24 * 30);
         const finalUrl = signed?.signedUrl ?? path;
         uploadedUrls.push(finalUrl);
       }
@@ -372,7 +381,10 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
 
         const { error: patchErr } = await supabase
           .from("tasks")
-          .update({ photo_url: formatted, status: task.status === "pending" ? "review" : task.status } as never)
+          .update({
+            photo_url: formatted,
+            status: task.status === "pending" ? "review" : task.status,
+          } as never)
           .eq("id", task.id);
 
         if (patchErr) throw patchErr;
@@ -384,7 +396,7 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
         toast.success(
           uploadedUrls.length === 1
             ? "1 foto de evidência enviada!"
-            : `${uploadedUrls.length} fotos de evidência enviadas!`
+            : `${uploadedUrls.length} fotos de evidência enviadas!`,
         );
       }
     } catch (err: unknown) {
@@ -445,7 +457,7 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     <span
                       className={cn(
                         "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
-                        priorityTone(task.priority)
+                        priorityTone(task.priority),
                       )}
                     >
                       {task.priority}
@@ -454,7 +466,7 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     <span
                       className={cn(
                         "inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border",
-                        currentStatusObj?.tone
+                        currentStatusObj?.tone,
                       )}
                     >
                       {currentStatusObj?.label || task.status}
@@ -647,8 +659,16 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                 <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={updateTask.isPending} className="bg-gradient-ember shadow-ember">
-                  {updateTask.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                <Button
+                  type="submit"
+                  disabled={updateTask.isPending}
+                  className="bg-gradient-ember shadow-ember"
+                >
+                  {updateTask.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Salvar Alterações"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -693,7 +713,10 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     {new Date(task.created_at).toLocaleDateString("pt-BR")}
                   </div>
                   <span className="text-[10px] text-muted-foreground block">
-                    {new Date(task.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(task.created_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
 
@@ -702,11 +725,17 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     <Clock className="h-3 w-3" /> Início
                   </div>
                   <div className="font-semibold text-sm text-foreground">
-                    {task.started_at ? new Date(task.started_at).toLocaleDateString("pt-BR") : "Pendente"}
+                    {task.started_at
+                      ? new Date(task.started_at).toLocaleDateString("pt-BR")
+                      : "Pendente"}
                   </div>
                   {task.started_at && (
                     <span className="text-[10px] text-muted-foreground block">
-                      Iniciado às {new Date(task.started_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      Iniciado às{" "}
+                      {new Date(task.started_at).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   )}
                 </div>
@@ -716,11 +745,17 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     <Clock className="h-3 w-3" /> Conclusão
                   </div>
                   <div className="font-semibold text-sm text-foreground">
-                    {task.completed_at ? new Date(task.completed_at).toLocaleDateString("pt-BR") : "Pendente"}
+                    {task.completed_at
+                      ? new Date(task.completed_at).toLocaleDateString("pt-BR")
+                      : "Pendente"}
                   </div>
                   {task.completed_at && (
                     <span className="text-[10px] text-success block">
-                      Concluído às {new Date(task.completed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      Concluído às{" "}
+                      {new Date(task.completed_at).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   )}
                 </div>
@@ -735,7 +770,9 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                   {task.description ? (
                     <FormattedText text={task.description} />
                   ) : (
-                    <span className="text-muted-foreground italic">Nenhuma descrição informada.</span>
+                    <span className="text-muted-foreground italic">
+                      Nenhuma descrição informada.
+                    </span>
                   )}
                 </div>
               </div>
@@ -753,7 +790,8 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                       onClick={() => setEditingNotes(true)}
                       className="h-7 text-xs text-primary"
                     >
-                      <Pencil className="h-3 w-3" /> {task.notes ? "Editar notas" : "Adicionar nota"}
+                      <Pencil className="h-3 w-3" />{" "}
+                      {task.notes ? "Editar notas" : "Adicionar nota"}
                     </Button>
                   )}
                 </div>
@@ -776,7 +814,11 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                         disabled={saveNotes.isPending}
                         className="bg-gradient-ember shadow-ember"
                       >
-                        {saveNotes.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Salvar Nota"}
+                        {saveNotes.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          "Salvar Nota"
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -785,7 +827,9 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
                     {task.notes ? (
                       <FormattedText text={task.notes} />
                     ) : (
-                      <span className="text-muted-foreground italic">Sem observações operacionais registradas.</span>
+                      <span className="text-muted-foreground italic">
+                        Sem observações operacionais registradas.
+                      </span>
                     )}
                   </div>
                 )}
@@ -795,7 +839,8 @@ export function TaskDetailModal({ task, open, onOpenChange, onTaskUpdated }: Tas
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Camera className="h-3.5 w-3.5 text-warning" /> Evidências Fotográficas ({existingPhotos.length})
+                    <Camera className="h-3.5 w-3.5 text-warning" /> Evidências Fotográficas (
+                    {existingPhotos.length})
                   </h4>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

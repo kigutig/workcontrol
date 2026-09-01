@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { title: "Dashboard — FitControl" },
       { name: "description", content: "Métricas em tempo real da produção da oficina." },
       { property: "og:title", content: "Dashboard — FitControl" },
-      { property: "og:description", content: "Painel operacional com métricas e desempenho da produção." },
+      {
+        property: "og:description",
+        content: "Painel operacional com métricas e desempenho da produção.",
+      },
     ],
   }),
   component: Dashboard,
@@ -51,7 +54,10 @@ function Dashboard() {
   const total = tasks.length;
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   const doneToday = tasks.filter(
-    (t) => t.status === "done" && t.completed_at && new Date(t.completed_at).toDateString() === new Date().toDateString(),
+    (t) =>
+      t.status === "done" &&
+      t.completed_at &&
+      new Date(t.completed_at).toDateString() === new Date().toDateString(),
   ).length;
 
   const byType = TASK_TYPES.map((t) => ({
@@ -109,7 +115,9 @@ function Dashboard() {
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Produção por Categoria
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">Volume de tarefas e conclusão por operação</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Volume de tarefas e conclusão por operação
+              </p>
             </div>
           </div>
           <div className="space-y-5">
@@ -123,13 +131,16 @@ function Dashboard() {
                       {row.type}
                     </span>
                     <span className="text-muted-foreground tabular-nums">
-                      {row.done}/{row.total} <span className="text-primary font-semibold">{p}%</span>
+                      {row.done}/{row.total}{" "}
+                      <span className="text-primary font-semibold">{p}%</span>
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-accent/60">
                     <div
                       className="h-full bg-gradient-ember transition-all"
-                      style={{ width: `${row.total ? Math.max(4, (row.total / Math.max(...byType.map((b) => b.total), 1)) * 100) : 0}%` }}
+                      style={{
+                        width: `${row.total ? Math.max(4, (row.total / Math.max(...byType.map((b) => b.total), 1)) * 100) : 0}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -152,8 +163,16 @@ function Dashboard() {
             {STATUS.map((s) => {
               const n = byStatus(s.id);
               return (
-                <div key={s.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-surface-elevated p-3">
-                  <span className={cn("inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border", s.tone)}>
+                <div
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-xl border border-border/50 bg-surface-elevated p-3"
+                >
+                  <span
+                    className={cn(
+                      "inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border",
+                      s.tone,
+                    )}
+                  >
                     {s.label}
                   </span>
                   <span className="ml-auto font-display text-2xl font-bold tabular-nums">{n}</span>
@@ -169,7 +188,8 @@ function Dashboard() {
         <h3 className="font-display text-lg font-bold mb-4">Últimas atividades</h3>
         {recent.length === 0 ? (
           <div className="text-center text-sm text-muted-foreground py-12">
-            Nenhuma tarefa registrada. Comece criando uma no <span className="text-primary font-semibold">Quadro Kanban</span>.
+            Nenhuma tarefa registrada. Comece criando uma no{" "}
+            <span className="text-primary font-semibold">Quadro Kanban</span>.
           </div>
         ) : (
           <div className="divide-y divide-border/50">
@@ -187,9 +207,16 @@ function Dashboard() {
                   <span className="text-2xl">{typeIcon(t.type)}</span>
                   <div className="min-w-0">
                     <div className="truncate font-semibold text-foreground">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">{t.type} · {new Date(t.created_at).toLocaleString("pt-BR")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t.type} · {new Date(t.created_at).toLocaleString("pt-BR")}
+                    </div>
                   </div>
-                  <span className={cn("shrink-0 inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border", st?.tone)}>
+                  <span
+                    className={cn(
+                      "shrink-0 inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border",
+                      st?.tone,
+                    )}
+                  >
                     {st?.label}
                   </span>
                 </div>
@@ -200,11 +227,7 @@ function Dashboard() {
       </div>
 
       {/* Modal de Detalhes da Tarefa */}
-      <TaskDetailModal
-        task={selectedTask}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
+      <TaskDetailModal task={selectedTask} open={detailOpen} onOpenChange={setDetailOpen} />
     </AppShell>
   );
 }

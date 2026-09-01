@@ -4,19 +4,54 @@ import { useRef, useState, useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { STATUS, TASK_TYPES, PRIORITIES, typeIcon, priorityTone, parsePhotoUrls, formatPhotoUrls, type TaskInterval } from "@/lib/task-utils";
+import {
+  STATUS,
+  TASK_TYPES,
+  PRIORITIES,
+  typeIcon,
+  priorityTone,
+  parsePhotoUrls,
+  formatPhotoUrls,
+  type TaskInterval,
+} from "@/lib/task-utils";
 import { TaskDetailModal, type TaskDetail } from "@/components/task-detail-modal";
 import { MachineFormFields, resolveOrCreateMachine } from "@/components/machine-selector";
-import { Camera, CheckCircle2, Loader2, Play, Pause, Plus, MoreVertical, Eye, Pencil, Trash2, ImageIcon, Bell } from "lucide-react";
+import {
+  Camera,
+  CheckCircle2,
+  Loader2,
+  Play,
+  Pause,
+  Plus,
+  MoreVertical,
+  Eye,
+  Pencil,
+  Trash2,
+  ImageIcon,
+  Bell,
+} from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Camera as CapCamera, CameraResultType } from "@capacitor/camera";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,9 +66,15 @@ export const Route = createFileRoute("/_authenticated/my-tasks")({
   head: () => ({
     meta: [
       { title: "Minhas Tarefas — FitControl" },
-      { name: "description", content: "Suas tarefas do dia com registro de evidência fotográfica." },
+      {
+        name: "description",
+        content: "Suas tarefas do dia com registro de evidência fotográfica.",
+      },
       { property: "og:title", content: "Minhas Tarefas — FitControl" },
-      { property: "og:description", content: "Foco no que é seu: tarefas atribuídas e evidências." },
+      {
+        property: "og:description",
+        content: "Foco no que é seu: tarefas atribuídas e evidências.",
+      },
     ],
   }),
   component: MyTasks,
@@ -78,7 +119,9 @@ function MyTasks() {
         if (photo.webPath) {
           const response = await fetch(photo.webPath);
           const blob = await response.blob();
-          files.push(new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }));
+          files.push(
+            new File([blob], `gallery-${Date.now()}-${files.length}.jpg`, { type: "image/jpeg" }),
+          );
         }
       }
       return files;
@@ -165,7 +208,7 @@ function MyTasks() {
     const resolvedMachineId = await resolveOrCreateMachine(
       createMachineId,
       createMachineCode,
-      createMachineName
+      createMachineName,
     );
 
     create.mutate({
@@ -194,14 +237,24 @@ function MyTasks() {
   });
 
   const setStatus = useMutation({
-    mutationFn: async ({ id, status, currentStartedAt, intervals }: { id: string; status: string; currentStartedAt?: string | null; intervals?: TaskInterval[] }) => {
+    mutationFn: async ({
+      id,
+      status,
+      currentStartedAt,
+      intervals,
+    }: {
+      id: string;
+      status: string;
+      currentStartedAt?: string | null;
+      intervals?: TaskInterval[];
+    }) => {
       const patch: Record<string, unknown> = { status };
       if (status === "done") {
         patch.completed_at = new Date().toISOString();
       } else {
         patch.completed_at = null;
       }
-      
+
       if (status !== "pending" && !currentStartedAt) {
         patch.started_at = new Date().toISOString();
       } else if (status === "pending") {
@@ -212,7 +265,10 @@ function MyTasks() {
         patch.intervals = intervals as any;
       }
 
-      const { error } = await supabase.from("tasks").update(patch as never).eq("id", id);
+      const { error } = await supabase
+        .from("tasks")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-tasks"] }),
@@ -233,7 +289,9 @@ function MyTasks() {
           toast.error(`Falha no upload de ${file.name}`, { description: error.message });
           continue;
         }
-        const { data: signed } = await supabase.storage.from("evidence").createSignedUrl(path, 60 * 60 * 24 * 30);
+        const { data: signed } = await supabase.storage
+          .from("evidence")
+          .createSignedUrl(path, 60 * 60 * 24 * 30);
         uploadedUrls.push(signed?.signedUrl ?? path);
       }
 
@@ -244,12 +302,17 @@ function MyTasks() {
 
         await supabase
           .from("tasks")
-          .update({ photo_url: formatted, status: taskObj.status === "pending" ? "review" : taskObj.status })
+          .update({
+            photo_url: formatted,
+            status: taskObj.status === "pending" ? "review" : taskObj.status,
+          })
           .eq("id", taskObj.id);
 
         qc.invalidateQueries({ queryKey: ["my-tasks"] });
         toast.success(
-          uploadedUrls.length === 1 ? "Evidência enviada" : `${uploadedUrls.length} evidências enviadas`
+          uploadedUrls.length === 1
+            ? "Evidência enviada"
+            : `${uploadedUrls.length} evidências enviadas`,
         );
       }
     } catch (err: unknown) {
@@ -301,7 +364,9 @@ function MyTasks() {
             toast.error("Permissão de notificações recusada.");
           }
         } else {
-          toast.error("Plugin de notificações indisponível. Por favor, gere um novo APK no Android Studio para incluir o plugin nativo de notificações.");
+          toast.error(
+            "Plugin de notificações indisponível. Por favor, gere um novo APK no Android Studio para incluir o plugin nativo de notificações.",
+          );
         }
       } else if ("Notification" in window) {
         const result = await Notification.requestPermission();
@@ -399,7 +464,11 @@ function MyTasks() {
                 <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={create.isPending} className="bg-gradient-ember shadow-ember">
+                <Button
+                  type="submit"
+                  disabled={create.isPending}
+                  className="bg-gradient-ember shadow-ember"
+                >
                   {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Tarefa"}
                 </Button>
               </DialogFooter>
@@ -416,7 +485,9 @@ function MyTasks() {
             </div>
             <div>
               <h4 className="font-semibold text-sm">Permita notificações no celular</h4>
-              <p className="text-xs opacity-90 mt-0.5">Receba alertas em tempo real sempre que um supervisor criar uma tarefa para você.</p>
+              <p className="text-xs opacity-90 mt-0.5">
+                Receba alertas em tempo real sempre que um supervisor criar uma tarefa para você.
+              </p>
             </div>
           </div>
           <Button
@@ -429,18 +500,24 @@ function MyTasks() {
         </div>
       )}
       {isLoading ? (
-        <div className="grid place-items-center py-24"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="grid place-items-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       ) : tasks.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/60 p-16 text-center">
           <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-3" />
           <h3 className="font-display text-xl font-bold">Sem tarefas para você agora</h3>
-          <p className="text-muted-foreground mt-1">Assim que um supervisor atribuir, aparecerá aqui.</p>
+          <p className="text-muted-foreground mt-1">
+            Assim que um supervisor atribuir, aparecerá aqui.
+          </p>
         </div>
       ) : (
         <div className="space-y-8">
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-bold">Ativas <span className="text-muted-foreground">({pending.length})</span></h2>
+              <h2 className="font-display text-lg font-bold">
+                Ativas <span className="text-muted-foreground">({pending.length})</span>
+              </h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {pending.map((t) => {
@@ -462,17 +539,31 @@ function MyTasks() {
                         <span className="text-3xl">{typeIcon(t.type)}</span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border", priorityTone(t.priority))}>
+                            <span
+                              className={cn(
+                                "inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border",
+                                priorityTone(t.priority),
+                              )}
+                            >
                               {t.priority}
                             </span>
-                            <span className={cn("inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border", st?.tone)}>
+                            <span
+                              className={cn(
+                                "inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border",
+                                st?.tone,
+                              )}
+                            >
                               {st?.label}
                             </span>
                           </div>
-                          <h3 className="mt-2 font-display text-lg font-bold leading-tight">{t.title}</h3>
-                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {t.type} · Criada em {new Date(t.created_at).toLocaleDateString("pt-BR")}
-                            {t.started_at && ` · Iniciada em ${new Date(t.started_at).toLocaleDateString("pt-BR")}`}
+                          <h3 className="mt-2 font-display text-lg font-bold leading-tight">
+                            {t.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t.type} · Criada em{" "}
+                            {new Date(t.created_at).toLocaleDateString("pt-BR")}
+                            {t.started_at &&
+                              ` · Iniciada em ${new Date(t.started_at).toLocaleDateString("pt-BR")}`}
                           </p>
                         </div>
                       </div>
@@ -516,11 +607,17 @@ function MyTasks() {
                               disabled={t.status === s.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setStatus.mutate({ id: t.id, status: s.id, currentStartedAt: t.started_at });
+                                setStatus.mutate({
+                                  id: t.id,
+                                  status: s.id,
+                                  currentStartedAt: t.started_at,
+                                });
                               }}
                               className="text-xs"
                             >
-                              <span className={cn("h-2 w-2 rounded-full mr-2", s.tone.split(" ")[0])} />
+                              <span
+                                className={cn("h-2 w-2 rounded-full mr-2", s.tone.split(" ")[0])}
+                              />
                               Mover para {s.label}
                             </DropdownMenuItem>
                           ))}
@@ -544,13 +641,22 @@ function MyTasks() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    {t.description && <p className="text-sm text-muted-foreground mt-3">{t.description}</p>}
+                    {t.description && (
+                      <p className="text-sm text-muted-foreground mt-3">{t.description}</p>
+                    )}
 
                     {photos.length > 0 && (
                       <div className="mt-4 grid grid-cols-3 gap-2 overflow-hidden rounded-lg">
                         {photos.slice(0, 3).map((url, i) => (
-                          <div key={i} className="relative aspect-video overflow-hidden rounded-md border border-border/50 bg-black/40">
-                            <img src={url} alt={`Evidência ${i + 1}`} className="w-full h-full object-cover" />
+                          <div
+                            key={i}
+                            className="relative aspect-video overflow-hidden rounded-md border border-border/50 bg-black/40"
+                          >
+                            <img
+                              src={url}
+                              alt={`Evidência ${i + 1}`}
+                              className="w-full h-full object-cover"
+                            />
                             {i === 2 && photos.length > 3 && (
                               <div className="absolute inset-0 bg-black/70 flex items-center justify-center font-bold text-white text-xs">
                                 +{photos.length - 3}
@@ -567,7 +673,11 @@ function MyTasks() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                             setStatus.mutate({ id: t.id, status: "progress", currentStartedAt: t.started_at });
+                            setStatus.mutate({
+                              id: t.id,
+                              status: "progress",
+                              currentStartedAt: t.started_at,
+                            });
                           }}
                           className="bg-info/20 text-info hover:bg-info/30"
                         >
@@ -580,7 +690,9 @@ function MyTasks() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const newIntervals = [...(t.intervals as unknown as TaskInterval[] || [])];
+                            const newIntervals = [
+                              ...((t.intervals as unknown as TaskInterval[]) || []),
+                            ];
                             newIntervals.push({
                               paused_at: new Date().toISOString(),
                               resumed_at: null,
@@ -604,7 +716,9 @@ function MyTasks() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const newIntervals = [...(t.intervals as unknown as TaskInterval[] || [])];
+                            const newIntervals = [
+                              ...((t.intervals as unknown as TaskInterval[]) || []),
+                            ];
                             if (newIntervals.length > 0) {
                               const lastIdx = newIntervals.length - 1;
                               if (!newIntervals[lastIdx].resumed_at) {
@@ -628,7 +742,9 @@ function MyTasks() {
                       )}
 
                       <input
-                        ref={(el) => { fileRefs.current[t.id] = el; }}
+                        ref={(el) => {
+                          fileRefs.current[t.id] = el;
+                        }}
                         type="file"
                         accept="image/*"
                         multiple
@@ -655,7 +771,9 @@ function MyTasks() {
                           <DropdownMenuItem onClick={() => handleTakePhotoForTask(t as TaskDetail)}>
                             <Camera className="h-4 w-4 mr-2" /> Tirar Foto
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handlePickPhotosForTask(t as TaskDetail)}>
+                          <DropdownMenuItem
+                            onClick={() => handlePickPhotosForTask(t as TaskDetail)}
+                          >
                             <ImageIcon className="h-4 w-4 mr-2" /> Escolher da Galeria
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -665,7 +783,9 @@ function MyTasks() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            let newIntervals = [...(t.intervals as unknown as TaskInterval[] || [])];
+                            let newIntervals = [
+                              ...((t.intervals as unknown as TaskInterval[]) || []),
+                            ];
                             if (t.status === "paused" && newIntervals.length > 0) {
                               const lastIdx = newIntervals.length - 1;
                               if (!newIntervals[lastIdx].resumed_at) {
@@ -694,56 +814,54 @@ function MyTasks() {
             </div>
           </section>
 
-            {done.length > 0 && (
-              <section>
-                <h2 className="font-display text-lg font-bold mb-4">Concluídas <span className="text-muted-foreground">({done.length})</span></h2>
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {done.map((t) => (
-                    <div
-                      key={t.id}
-                      onClick={() => {
-                        setSelectedTask(t as TaskDetail);
-                        setDetailOpen(true);
-                      }}
-                      className="rounded-xl border border-border/60 bg-card/50 p-4 opacity-80 cursor-pointer hover:opacity-100 hover:border-primary/40 transition-all"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{typeIcon(t.type)}</span>
-                        <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border bg-success/15 text-success border-success/30">
-                          Concluído
-                        </span>
-                      </div>
-                      <div className="mt-2 font-semibold text-sm">{t.title}</div>
-                      {t.completed_at && (
-                        <div className="text-[11px] text-muted-foreground mt-1">
-                          {new Date(t.completed_at).toLocaleString("pt-BR")}
-                        </div>
-                      )}
+          {done.length > 0 && (
+            <section>
+              <h2 className="font-display text-lg font-bold mb-4">
+                Concluídas <span className="text-muted-foreground">({done.length})</span>
+              </h2>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {done.map((t) => (
+                  <div
+                    key={t.id}
+                    onClick={() => {
+                      setSelectedTask(t as TaskDetail);
+                      setDetailOpen(true);
+                    }}
+                    className="rounded-xl border border-border/60 bg-card/50 p-4 opacity-80 cursor-pointer hover:opacity-100 hover:border-primary/40 transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{typeIcon(t.type)}</span>
+                      <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border bg-success/15 text-success border-success/30">
+                        Concluído
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-
-        {/* Botão Flutuante no Celular (FAB) */}
-        <div className="fixed bottom-6 right-6 lg:hidden z-30">
-          <Button
-            onClick={() => setCreateOpen(true)}
-            className="h-14 w-14 rounded-full bg-gradient-ember shadow-ember p-0 grid place-items-center text-primary-foreground shadow-2xl hover:scale-105 transition-transform"
-            aria-label="Criar nova tarefa"
-          >
-            <Plus className="h-7 w-7" />
-          </Button>
+                    <div className="mt-2 font-semibold text-sm">{t.title}</div>
+                    {t.completed_at && (
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {new Date(t.completed_at).toLocaleString("pt-BR")}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
+      )}
 
-        {/* Modal de Detalhes da Tarefa */}
-        <TaskDetailModal
-          task={selectedTask}
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
-        />
-      </AppShell>
-    );
-  }
+      {/* Botão Flutuante no Celular (FAB) */}
+      <div className="fixed bottom-6 right-6 lg:hidden z-30">
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="h-14 w-14 rounded-full bg-gradient-ember shadow-ember p-0 grid place-items-center text-primary-foreground shadow-2xl hover:scale-105 transition-transform"
+          aria-label="Criar nova tarefa"
+        >
+          <Plus className="h-7 w-7" />
+        </Button>
+      </div>
+
+      {/* Modal de Detalhes da Tarefa */}
+      <TaskDetailModal task={selectedTask} open={detailOpen} onOpenChange={setDetailOpen} />
+    </AppShell>
+  );
+}

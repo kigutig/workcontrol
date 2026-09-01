@@ -108,10 +108,7 @@ describe("parsePhotoUrls", () => {
   });
 
   it("filters out empty strings from comma-separated", () => {
-    expect(parsePhotoUrls("url1.jpg,,url2.jpg")).toEqual([
-      "url1.jpg",
-      "url2.jpg",
-    ]);
+    expect(parsePhotoUrls("url1.jpg,,url2.jpg")).toEqual(["url1.jpg", "url2.jpg"]);
   });
 
   it("handles invalid JSON gracefully", () => {

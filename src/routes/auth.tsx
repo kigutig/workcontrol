@@ -13,7 +13,10 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Entrar — FitControl" },
-      { name: "description", content: "Acesse a plataforma FitControl para gerenciar tarefas e produção da oficina." },
+      {
+        name: "description",
+        content: "Acesse a plataforma FitControl para gerenciar tarefas e produção da oficina.",
+      },
       { property: "og:title", content: "Entrar — FitControl" },
       { property: "og:description", content: "Acesso ao sistema de gestão de oficina FitControl." },
     ],
@@ -74,7 +77,9 @@ function AuthPage() {
           </div>
           <div>
             <div className="font-display text-xl font-bold tracking-tight">FitControl</div>
-            <div className="text-xs text-muted-foreground uppercase tracking-widest">Logística & Oficina</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-widest">
+              Logística & Oficina
+            </div>
           </div>
         </div>
 
@@ -84,10 +89,12 @@ function AuthPage() {
             Sistema Operacional
           </div>
           <h1 className="font-display text-5xl font-black leading-[1.05] tracking-tight">
-            Controle industrial da <span className="text-primary">produção</span>, do chão da oficina.
+            Controle industrial da <span className="text-primary">produção</span>, do chão da
+            oficina.
           </h1>
           <p className="text-lg text-muted-foreground">
-            Montagem, pintura, limpeza, manutenção e embalagem — tudo em um só painel, com evidências fotográficas e métricas em tempo real.
+            Montagem, pintura, limpeza, manutenção e embalagem — tudo em um só painel, com
+            evidências fotográficas e métricas em tempo real.
           </p>
           <div className="grid grid-cols-3 gap-3 pt-6">
             {[
@@ -95,7 +102,10 @@ function AuthPage() {
               { k: "Provas", v: "Fotos" },
               { k: "Métricas", v: "Ao vivo" },
             ].map((s) => (
-              <div key={s.k} className="rounded-xl border border-border/60 bg-surface-elevated/60 p-4">
+              <div
+                key={s.k}
+                className="rounded-xl border border-border/60 bg-surface-elevated/60 p-4"
+              >
                 <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.k}</div>
                 <div className="mt-1 font-display font-bold">{s.v}</div>
               </div>
@@ -118,7 +128,9 @@ function AuthPage() {
 
           <div>
             <h2 className="font-display text-3xl font-bold">Acessar a plataforma</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Entre para gerenciar suas tarefas do dia.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Entre para gerenciar suas tarefas do dia.
+            </p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -131,13 +143,31 @@ function AuthPage() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" name="email" type="email" required placeholder="voce@fitcontrol.com" className="h-11" />
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="voce@fitcontrol.com"
+                    className="h-11"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Senha</Label>
-                  <Input id="login-password" name="password" type="password" required placeholder="••••••••" className="h-11" />
+                  <Input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="h-11"
+                  />
                 </div>
-                <Button type="submit" disabled={busy} className="w-full h-11 bg-gradient-ember shadow-ember font-semibold">
+                <Button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full h-11 bg-gradient-ember shadow-ember font-semibold"
+                >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar no sistema"}
                 </Button>
               </form>
@@ -147,17 +177,42 @@ function AuthPage() {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Nome completo</Label>
-                  <Input id="signup-name" name="name" required placeholder="João Silva" className="h-11" />
+                  <Input
+                    id="signup-name"
+                    name="name"
+                    required
+                    placeholder="João Silva"
+                    className="h-11"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" name="email" type="email" required placeholder="voce@fitcontrol.com" className="h-11" />
+                  <Input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="voce@fitcontrol.com"
+                    className="h-11"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha</Label>
-                  <Input id="signup-password" name="password" type="password" required minLength={6} placeholder="Mínimo 6 caracteres" className="h-11" />
+                  <Input
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Mínimo 6 caracteres"
+                    className="h-11"
+                  />
                 </div>
-                <Button type="submit" disabled={busy} className="w-full h-11 bg-gradient-ember shadow-ember font-semibold">
+                <Button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full h-11 bg-gradient-ember shadow-ember font-semibold"
+                >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
                 </Button>
               </form>

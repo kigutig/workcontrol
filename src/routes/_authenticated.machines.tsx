@@ -1,15 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Wrench, Loader2, Trash2, MoreVertical, Eye, Pencil, Calendar, ClipboardList } from "lucide-react";
+import {
+  Plus,
+  Wrench,
+  Loader2,
+  Trash2,
+  MoreVertical,
+  Eye,
+  Pencil,
+  Calendar,
+  ClipboardList,
+} from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,10 +63,14 @@ const MACHINE_STATUS = ["Em Montagem", "Em Pintura", "Em Manutenção", "Pronta"
 
 function statusTone(s: string) {
   switch (s) {
-    case "Pronta": return "bg-success/15 text-success border-success/30";
-    case "Enviada": return "bg-info/15 text-info border-info/30";
-    case "Em Manutenção": return "bg-warning/15 text-warning border-warning/30";
-    default: return "bg-primary/15 text-primary border-primary/30";
+    case "Pronta":
+      return "bg-success/15 text-success border-success/30";
+    case "Enviada":
+      return "bg-info/15 text-info border-info/30";
+    case "Em Manutenção":
+      return "bg-warning/15 text-warning border-warning/30";
+    default:
+      return "bg-primary/15 text-primary border-primary/30";
   }
 }
 
@@ -59,7 +86,9 @@ function Machines() {
 
   const { data: machines = [], isLoading } = useQuery({
     queryKey: ["machines"],
-    queryFn: async () => (await supabase.from("machines").select("*").order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("machines").select("*").order("created_at", { ascending: false }))
+        .data ?? [],
   });
 
   const { data: machineTasks = [], isLoading: isLoadingTasks } = useQuery({
@@ -91,7 +120,14 @@ function Machines() {
   });
 
   const update = useMutation({
-    mutationFn: async (payload: { id: string; code: string; name: string; category: string; origin: string | null; status: string }) => {
+    mutationFn: async (payload: {
+      id: string;
+      code: string;
+      name: string;
+      category: string;
+      origin: string | null;
+      status: string;
+    }) => {
       const { error } = await supabase
         .from("machines")
         .update({
@@ -134,7 +170,10 @@ function Machines() {
       const { error } = await supabase.from("machines").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["machines"] }); toast.success("Removida"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["machines"] });
+      toast.success("Removida");
+    },
   });
 
   const onCreate = (e: React.FormEvent<HTMLFormElement>) => {
@@ -162,7 +201,9 @@ function Machines() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle className="font-display text-xl">Cadastrar máquina</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle className="font-display text-xl">Cadastrar máquina</DialogTitle>
+              </DialogHeader>
               <form onSubmit={onCreate} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -172,8 +213,16 @@ function Machines() {
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select name="category" defaultValue="Cardio">
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                 </div>
@@ -189,13 +238,25 @@ function Machines() {
                   <div className="space-y-2">
                     <Label>Status</Label>
                     <Select name="status" defaultValue="Em Montagem">
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{MACHINE_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MACHINE_STATUS.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={create.isPending} className="bg-gradient-ember shadow-ember">
+                  <Button
+                    type="submit"
+                    disabled={create.isPending}
+                    className="bg-gradient-ember shadow-ember"
+                  >
                     {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cadastrar"}
                   </Button>
                 </DialogFooter>
@@ -206,12 +267,16 @@ function Machines() {
       }
     >
       {isLoading ? (
-        <div className="grid place-items-center py-24"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="grid place-items-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       ) : machines.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/60 p-16 text-center">
           <Wrench className="h-12 w-12 text-primary mx-auto mb-3" />
           <h3 className="font-display text-xl font-bold">Nenhuma máquina cadastrada</h3>
-          <p className="text-muted-foreground mt-1">Cadastre um equipamento para começar a organizar a produção.</p>
+          <p className="text-muted-foreground mt-1">
+            Cadastre um equipamento para começar a organizar a produção.
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -227,24 +292,47 @@ function Machines() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs uppercase tracking-widest text-muted-foreground">{m.category}</div>
-                  <div className="mt-1 font-display text-xl font-bold leading-tight truncate">{m.name}</div>
+                  <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                    {m.category}
+                  </div>
+                  <div className="mt-1 font-display text-xl font-bold leading-tight truncate">
+                    {m.name}
+                  </div>
                   <div className="mt-1 text-sm font-mono text-primary">{m.code}</div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center gap-1 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => { setSelectedMachine(m); setIsEditing(false); setDetailsOpen(true); }}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedMachine(m);
+                          setIsEditing(false);
+                          setDetailsOpen(true);
+                        }}
+                      >
                         <Eye className="h-4 w-4 mr-2" /> Visualizar
                       </DropdownMenuItem>
                       {isSupervisor && (
                         <>
-                          <DropdownMenuItem onClick={() => { setSelectedMachine(m); setIsEditing(true); setDetailsOpen(true); }}>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedMachine(m);
+                              setIsEditing(true);
+                              setDetailsOpen(true);
+                            }}
+                          >
                             <Pencil className="h-4 w-4 mr-2" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -255,7 +343,10 @@ function Machines() {
                             <DropdownMenuItem
                               key={status}
                               onClick={() => updateStatus.mutate({ id: m.id, status })}
-                              className={cn("text-xs", m.status === status && "font-semibold text-primary")}
+                              className={cn(
+                                "text-xs",
+                                m.status === status && "font-semibold text-primary",
+                              )}
                             >
                               {status}
                             </DropdownMenuItem>
@@ -280,9 +371,16 @@ function Machines() {
                   </span>
                 </div>
               </div>
-              {m.origin && <div className="mt-3 text-xs text-muted-foreground">Origem: {m.origin}</div>}
+              {m.origin && (
+                <div className="mt-3 text-xs text-muted-foreground">Origem: {m.origin}</div>
+              )}
               <div className="mt-4 flex items-center justify-between">
-                <span className={cn("inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border", statusTone(m.status))}>
+                <span
+                  className={cn(
+                    "inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border",
+                    statusTone(m.status),
+                  )}
+                >
                   {m.status}
                 </span>
               </div>
@@ -326,9 +424,15 @@ function Machines() {
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select name="category" defaultValue={selectedMachine.category || "Cardio"}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        {CATEGORIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -340,14 +444,24 @@ function Machines() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Origem</Label>
-                    <Input name="origin" defaultValue={selectedMachine.origin || ""} placeholder="Fornecedor / lote" />
+                    <Input
+                      name="origin"
+                      defaultValue={selectedMachine.origin || ""}
+                      placeholder="Fornecedor / lote"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Status</Label>
                     <Select name="status" defaultValue={selectedMachine.status}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {MACHINE_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {MACHINE_STATUS.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -356,8 +470,16 @@ function Machines() {
                   <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={update.isPending} className="bg-gradient-ember shadow-ember">
-                    {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                  <Button
+                    type="submit"
+                    disabled={update.isPending}
+                    className="bg-gradient-ember shadow-ember"
+                  >
+                    {update.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Salvar Alterações"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -366,11 +488,15 @@ function Machines() {
                 <div className="grid grid-cols-2 gap-4 rounded-xl bg-muted/40 p-4 border border-border/50">
                   <div>
                     <span className="text-xs text-muted-foreground block">Código</span>
-                    <span className="font-mono text-sm font-bold text-primary">{selectedMachine.code}</span>
+                    <span className="font-mono text-sm font-bold text-primary">
+                      {selectedMachine.code}
+                    </span>
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground block">Categoria</span>
-                    <span className="text-sm font-semibold">{selectedMachine.category || "Sem categoria"}</span>
+                    <span className="text-sm font-semibold">
+                      {selectedMachine.category || "Sem categoria"}
+                    </span>
                   </div>
                   <div className="col-span-2 border-t border-border/40 pt-2">
                     <span className="text-xs text-muted-foreground block">Nome do Equipamento</span>
@@ -378,14 +504,21 @@ function Machines() {
                   </div>
                   {selectedMachine.origin && (
                     <div className="col-span-2 border-t border-border/40 pt-2">
-                      <span className="text-xs text-muted-foreground block">Origem / Fornecedor / Lote</span>
+                      <span className="text-xs text-muted-foreground block">
+                        Origem / Fornecedor / Lote
+                      </span>
                       <span className="text-sm">{selectedMachine.origin}</span>
                     </div>
                   )}
                   <div className="col-span-2 border-t border-border/40 pt-2 flex items-center justify-between">
                     <div>
                       <span className="text-xs text-muted-foreground block mb-1">Status Atual</span>
-                      <span className={cn("inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border", statusTone(selectedMachine.status))}>
+                      <span
+                        className={cn(
+                          "inline-flex px-2 py-1 rounded-md text-[10px] font-bold uppercase border",
+                          statusTone(selectedMachine.status),
+                        )}
+                      >
                         {selectedMachine.status}
                       </span>
                     </div>
@@ -402,9 +535,11 @@ function Machines() {
                     <ClipboardList className="h-4 w-4 text-primary" />
                     Tarefas Vinculadas ({machineTasks.length})
                   </h4>
-                  
+
                   {isLoadingTasks ? (
-                    <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
                   ) : machineTasks.length === 0 ? (
                     <p className="text-xs text-muted-foreground bg-muted/20 border border-dashed rounded-lg p-4 text-center">
                       Nenhuma tarefa vinculada a este equipamento.
@@ -425,15 +560,27 @@ function Machines() {
                             <div className="min-w-0 flex items-center gap-2">
                               <span className="text-lg shrink-0">{typeIcon(t.type)}</span>
                               <div className="truncate">
-                                <div className="text-xs font-semibold truncate text-foreground">{t.title}</div>
+                                <div className="text-xs font-semibold truncate text-foreground">
+                                  {t.title}
+                                </div>
                                 <div className="text-[10px] text-muted-foreground">{t.type}</div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border", priorityTone(t.priority))}>
+                              <span
+                                className={cn(
+                                  "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border",
+                                  priorityTone(t.priority),
+                                )}
+                              >
                                 {t.priority}
                               </span>
-                              <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border", st?.tone)}>
+                              <span
+                                className={cn(
+                                  "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border",
+                                  st?.tone,
+                                )}
+                              >
                                 {st?.label}
                               </span>
                             </div>
@@ -450,12 +597,7 @@ function Machines() {
       </Dialog>
 
       {/* Modal de Detalhes da Tarefa */}
-      <TaskDetailModal
-        task={selectedTask}
-        open={taskDetailOpen}
-        onOpenChange={setTaskDetailOpen}
-      />
+      <TaskDetailModal task={selectedTask} open={taskDetailOpen} onOpenChange={setTaskDetailOpen} />
     </AppShell>
   );
 }
-

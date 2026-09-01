@@ -4,7 +4,13 @@ import { useState, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { STATUS, TASK_TYPES, typeIcon, priorityTone, calculateTaskTimings as calculateGlobalTaskTimings } from "@/lib/task-utils";
+import {
+  STATUS,
+  TASK_TYPES,
+  typeIcon,
+  priorityTone,
+  calculateTaskTimings as calculateGlobalTaskTimings,
+} from "@/lib/task-utils";
 import {
   GitCompare,
   TrendingUp,
@@ -18,11 +24,17 @@ import {
   Loader2,
   CheckCircle2,
   Coffee,
-  PlayCircle
+  PlayCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -45,7 +57,11 @@ export const Route = createFileRoute("/_authenticated/comparison")({
   head: () => ({
     meta: [
       { title: "Comparador de Desempenho — FitControl" },
-      { name: "description", content: "Compare a produtividade entre colaboradores ou analise a evolução temporal por meses e semanas." },
+      {
+        name: "description",
+        content:
+          "Compare a produtividade entre colaboradores ou analise a evolução temporal por meses e semanas.",
+      },
     ],
   }),
   component: ComparisonPage,
@@ -54,8 +70,18 @@ export const Route = createFileRoute("/_authenticated/comparison")({
 type ComparisonTab = "temporal" | "colaboradores";
 
 const MONTHS_PT = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 const YEARS = [2024, 2025, 2026, 2027];
@@ -92,12 +118,14 @@ function ComparisonPage() {
   // State: Temporal Comparison
   const [temporalType, setTemporalType] = useState<"month" | "week">("month");
   const [tempEmployeeId, setTempEmployeeId] = useState<string>("all");
-  
+
   // Period 1
-  const [t1Month, setT1Month] = useState<number>(new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1);
+  const [t1Month, setT1Month] = useState<number>(
+    new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1,
+  );
   const [t1Year, setT1Year] = useState<number>(new Date().getFullYear());
   const [t1Week, setT1Week] = useState<number>(1);
-  
+
   // Period 2
   const [t2Month, setT2Month] = useState<number>(new Date().getMonth());
   const [t2Year, setT2Year] = useState<number>(new Date().getFullYear());
@@ -124,7 +152,13 @@ function ComparisonPage() {
   };
 
   // ------------------ TEMPORAL COMPARISON LOGIC ------------------
-  const filterTasksForPeriod = (tasks: any[], type: "month" | "week", year: number, month: number, week: number) => {
+  const filterTasksForPeriod = (
+    tasks: any[],
+    type: "month" | "week",
+    year: number,
+    month: number,
+    week: number,
+  ) => {
     return tasks.filter((t) => {
       const date = new Date(t.created_at);
       if (date.getFullYear() !== year || date.getMonth() !== month) return false;
@@ -156,7 +190,7 @@ function ComparisonPage() {
       const total = tasks.length;
       const completed = tasks.filter((t) => t.status === "done").length;
       const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-      
+
       let activeMs = 0;
       let pausedMs = 0;
       let pauseCount = 0;
@@ -180,7 +214,7 @@ function ComparisonPage() {
         avgActiveMs,
         activeHrs: Math.round((activeMs / 3600000) * 10) / 10,
         pausedHrs: Math.round((pausedMs / 3600000) * 10) / 10,
-        avgActiveMin: Math.round(avgActiveMs / 60000)
+        avgActiveMin: Math.round(avgActiveMs / 60000),
       };
     };
 
@@ -208,8 +242,14 @@ function ComparisonPage() {
       }
     });
 
-    const labelP1 = temporalType === "month" ? `${MONTHS_PT[t1Month]}/${String(t1Year).slice(-2)}` : `Sem. ${t1Week} de ${MONTHS_PT[t1Month].slice(0, 3)}`;
-    const labelP2 = temporalType === "month" ? `${MONTHS_PT[t2Month]}/${String(t2Year).slice(-2)}` : `Sem. ${t2Week} de ${MONTHS_PT[t2Month].slice(0, 3)}`;
+    const labelP1 =
+      temporalType === "month"
+        ? `${MONTHS_PT[t1Month]}/${String(t1Year).slice(-2)}`
+        : `Sem. ${t1Week} de ${MONTHS_PT[t1Month].slice(0, 3)}`;
+    const labelP2 =
+      temporalType === "month"
+        ? `${MONTHS_PT[t2Month]}/${String(t2Year).slice(-2)}`
+        : `Sem. ${t2Week} de ${MONTHS_PT[t2Month].slice(0, 3)}`;
 
     return {
       p1: m1,
@@ -224,11 +264,22 @@ function ComparisonPage() {
         activeHrs: Math.round(getDelta(m1.activeHrs, m2.activeHrs) * 10) / 10,
         activeHrsPct: getDeltaPct(m1.activeHrs, m2.activeHrs),
         pauses: getDelta(m1.pauseCount, m2.pauseCount),
-        avgActiveMin: getDelta(m1.avgActiveMin, m2.avgActiveMin)
+        avgActiveMin: getDelta(m1.avgActiveMin, m2.avgActiveMin),
       },
-      categoryDistribution
+      categoryDistribution,
     };
-  }, [allTasks, isLoadingTasks, temporalType, tempEmployeeId, t1Month, t1Year, t1Week, t2Month, t2Year, t2Week]);
+  }, [
+    allTasks,
+    isLoadingTasks,
+    temporalType,
+    tempEmployeeId,
+    t1Month,
+    t1Year,
+    t1Week,
+    t2Month,
+    t2Year,
+    t2Week,
+  ]);
 
   // ------------------ COLLABORATORS COMPARISON LOGIC ------------------
   const colabStats = useMemo(() => {
@@ -237,8 +288,12 @@ function ComparisonPage() {
     const daysLimit = Number(colabDaysRange);
     const startTimestamp = Date.now() - daysLimit * 24 * 60 * 60 * 1000;
 
-    const colabTasksA = allTasks.filter((t) => t.assignee_id === colabIdA && new Date(t.created_at).getTime() >= startTimestamp);
-    const colabTasksB = allTasks.filter((t) => t.assignee_id === colabIdB && new Date(t.created_at).getTime() >= startTimestamp);
+    const colabTasksA = allTasks.filter(
+      (t) => t.assignee_id === colabIdA && new Date(t.created_at).getTime() >= startTimestamp,
+    );
+    const colabTasksB = allTasks.filter(
+      (t) => t.assignee_id === colabIdB && new Date(t.created_at).getTime() >= startTimestamp,
+    );
 
     const calcColabMetrics = (tasks: any[], name: string) => {
       const total = tasks.length;
@@ -267,7 +322,7 @@ function ComparisonPage() {
         pausedHrs: Math.round((pausedMs / 3600000) * 10) / 10,
         pauseCount,
         avgActiveMin: Math.round(avgActiveMs / 60000),
-        avgActiveHrs: Math.round((avgActiveMs / 3600000) * 10) / 10
+        avgActiveHrs: Math.round((avgActiveMs / 3600000) * 10) / 10,
       };
     };
 
@@ -298,13 +353,13 @@ function ComparisonPage() {
         name: "Qtd. Pausas",
         [nameA]: metricsA.pauseCount,
         [nameB]: metricsB.pauseCount,
-      }
+      },
     ];
 
     return {
       a: metricsA,
       b: metricsB,
-      chartData
+      chartData,
     };
   }, [allTasks, isLoadingTasks, colabIdA, colabIdB, colabDaysRange, profiles]);
 
@@ -318,19 +373,27 @@ function ComparisonPage() {
       );
     }
     const isPositive = value > 0;
-    
+
     // For average execution speed, smaller is better, so we invert colors
     const isGood = invertColors ? !isPositive : isPositive;
 
     return (
-      <span className={cn(
-        "inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded",
-        isGood 
-          ? "bg-success/15 text-success border border-success/20" 
-          : "bg-destructive/15 text-destructive border border-destructive/20"
-      )}>
-        {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-        {isPositive ? "+" : ""}{value}{isPercent && "%"}
+      <span
+        className={cn(
+          "inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded",
+          isGood
+            ? "bg-success/15 text-success border border-success/20"
+            : "bg-destructive/15 text-destructive border border-destructive/20",
+        )}
+      >
+        {isPositive ? (
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowDownRight className="h-3.5 w-3.5" />
+        )}
+        {isPositive ? "+" : ""}
+        {value}
+        {isPercent && "%"}
       </span>
     );
   };
@@ -340,7 +403,9 @@ function ComparisonPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center text-muted-foreground p-4">
         <AlertTriangle className="h-10 w-10 text-destructive mb-3" />
         <h2 className="text-lg font-bold text-foreground mb-1">Acesso Restrito</h2>
-        <p className="text-sm mb-4 text-center">Você não tem permissão para visualizar comparativos de desempenho.</p>
+        <p className="text-sm mb-4 text-center">
+          Você não tem permissão para visualizar comparativos de desempenho.
+        </p>
         <Button asChild>
           <Link to="/">Voltar ao Início</Link>
         </Button>
@@ -361,7 +426,7 @@ function ComparisonPage() {
             "flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all",
             activeTab === "temporal"
               ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >
           <Calendar className="h-4 w-4" /> Comparar Períodos
@@ -372,7 +437,7 @@ function ComparisonPage() {
             "flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all",
             activeTab === "colaboradores"
               ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >
           <GitCompare className="h-4 w-4" /> Comparar Colaboradores
@@ -393,7 +458,10 @@ function ComparisonPage() {
               {/* Compare Type */}
               <div className="space-y-2">
                 <Label>Nível do Intervalo</Label>
-                <Select value={temporalType} onValueChange={(val) => setTemporalType(val as "month" | "week")}>
+                <Select
+                  value={temporalType}
+                  onValueChange={(val) => setTemporalType(val as "month" | "week")}
+                >
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -426,17 +494,24 @@ function ComparisonPage() {
             <div className="grid gap-6 md:grid-cols-2 pt-2 border-t border-border/40">
               {/* Period 1 selection */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Período 1 (Referência)</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary">
+                  Período 1 (Referência)
+                </h4>
                 <div className="grid gap-3 grid-cols-2">
                   <div className="space-y-1">
                     <Label className="text-[10px]">Mês</Label>
-                    <Select value={String(t1Month)} onValueChange={(val) => setT1Month(Number(val))}>
+                    <Select
+                      value={String(t1Month)}
+                      onValueChange={(val) => setT1Month(Number(val))}
+                    >
                       <SelectTrigger className="bg-background h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {MONTHS_PT.map((m, idx) => (
-                          <SelectItem key={m} value={String(idx)} className="text-xs">{m}</SelectItem>
+                          <SelectItem key={m} value={String(idx)} className="text-xs">
+                            {m}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -449,7 +524,9 @@ function ComparisonPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {YEARS.map((y) => (
-                          <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                          <SelectItem key={y} value={String(y)} className="text-xs">
+                            {y}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -457,13 +534,18 @@ function ComparisonPage() {
                   {temporalType === "week" && (
                     <div className="space-y-1 col-span-2">
                       <Label className="text-[10px]">Semana</Label>
-                      <Select value={String(t1Week)} onValueChange={(val) => setT1Week(Number(val))}>
+                      <Select
+                        value={String(t1Week)}
+                        onValueChange={(val) => setT1Week(Number(val))}
+                      >
                         <SelectTrigger className="bg-background h-9 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {WEEKS_PT.map((w) => (
-                            <SelectItem key={w.id} value={String(w.id)} className="text-xs">{w.label}</SelectItem>
+                            <SelectItem key={w.id} value={String(w.id)} className="text-xs">
+                              {w.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -474,17 +556,24 @@ function ComparisonPage() {
 
               {/* Period 2 selection */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-info">Período 2 (Comparação)</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-info">
+                  Período 2 (Comparação)
+                </h4>
                 <div className="grid gap-3 grid-cols-2">
                   <div className="space-y-1">
                     <Label className="text-[10px]">Mês</Label>
-                    <Select value={String(t2Month)} onValueChange={(val) => setT2Month(Number(val))}>
+                    <Select
+                      value={String(t2Month)}
+                      onValueChange={(val) => setT2Month(Number(val))}
+                    >
                       <SelectTrigger className="bg-background h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {MONTHS_PT.map((m, idx) => (
-                          <SelectItem key={m} value={String(idx)} className="text-xs">{m}</SelectItem>
+                          <SelectItem key={m} value={String(idx)} className="text-xs">
+                            {m}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -497,7 +586,9 @@ function ComparisonPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {YEARS.map((y) => (
-                          <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                          <SelectItem key={y} value={String(y)} className="text-xs">
+                            {y}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -505,13 +596,18 @@ function ComparisonPage() {
                   {temporalType === "week" && (
                     <div className="space-y-1 col-span-2">
                       <Label className="text-[10px]">Semana</Label>
-                      <Select value={String(t2Week)} onValueChange={(val) => setT2Week(Number(val))}>
+                      <Select
+                        value={String(t2Week)}
+                        onValueChange={(val) => setT2Week(Number(val))}
+                      >
                         <SelectTrigger className="bg-background h-9 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {WEEKS_PT.map((w) => (
-                            <SelectItem key={w.id} value={String(w.id)} className="text-xs">{w.label}</SelectItem>
+                            <SelectItem key={w.id} value={String(w.id)} className="text-xs">
+                              {w.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -528,10 +624,11 @@ function ComparisonPage() {
               {/* Header Title displaying what's being compared */}
               <div className="bg-surface-elevated/20 border border-border/40 rounded-2xl p-4 flex flex-wrap justify-between items-center print:border-none print:p-0">
                 <div className="text-sm font-semibold text-foreground">
-                  Análise: <span className="text-primary font-bold">{temporalStats.labels.p1}</span> vs <span className="text-info font-bold">{temporalStats.labels.p2}</span>
+                  Análise: <span className="text-primary font-bold">{temporalStats.labels.p1}</span>{" "}
+                  vs <span className="text-info font-bold">{temporalStats.labels.p2}</span>
                   {tempEmployeeId !== "all" && (
                     <span className="text-muted-foreground ml-1.5 border-l border-border/50 pl-2">
-                      Colaborador: {profiles.find(p => p.id === tempEmployeeId)?.name}
+                      Colaborador: {profiles.find((p) => p.id === tempEmployeeId)?.name}
                     </span>
                   )}
                 </div>
@@ -544,7 +641,9 @@ function ComparisonPage() {
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 {/* 1. Total Tasks */}
                 <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Volume de Tarefas</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Volume de Tarefas
+                  </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-2xl font-black tabular-nums text-foreground">
                       {temporalStats.p2.total}
@@ -561,7 +660,9 @@ function ComparisonPage() {
 
                 {/* 2. Tasks Completed */}
                 <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Concluídas</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Concluídas
+                  </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-2xl font-black tabular-nums text-success">
                       {temporalStats.p2.completed}
@@ -578,7 +679,9 @@ function ComparisonPage() {
 
                 {/* 3. Resolution Rate */}
                 <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-semibold text-info">Taxa de Resolução</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-semibold text-info">
+                    Taxa de Resolução
+                  </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-2xl font-black tabular-nums text-info">
                       {temporalStats.p2.rate}%
@@ -595,7 +698,9 @@ function ComparisonPage() {
 
                 {/* 4. Active Working Hours */}
                 <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tempo Ativo Total</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Tempo Ativo Total
+                  </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-xl font-black tabular-nums text-foreground">
                       {temporalStats.p2.activeHrs}h
@@ -612,7 +717,9 @@ function ComparisonPage() {
 
                 {/* 5. Speed (avg minutes per task) */}
                 <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tempo Médio/Tarefa</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Tempo Médio/Tarefa
+                  </span>
                   <div className="flex items-baseline justify-between">
                     <span className="text-xl font-black tabular-nums text-foreground">
                       {temporalStats.p2.avgActiveMin}m
@@ -638,17 +745,44 @@ function ComparisonPage() {
                 {temporalStats.categoryDistribution.length > 0 ? (
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={temporalStats.categoryDistribution} margin={{ top: 10, bottom: 5 }}>
+                      <BarChart
+                        data={temporalStats.categoryDistribution}
+                        margin={{ top: 10, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis dataKey="name" stroke="#888" fontSize={11} />
                         <YAxis stroke="#888" fontSize={10} allowDecimals={false} />
-                        <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e1e2e",
+                            borderColor: "#333",
+                            color: "#fff",
+                          }}
+                        />
                         <Legend />
-                        <Bar name={temporalStats.labels.p1} dataKey="Período 1" fill="#f97316" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="Período 1" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name={temporalStats.labels.p1}
+                          dataKey="Período 1"
+                          fill="#f97316"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="Período 1"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
-                        <Bar name={temporalStats.labels.p2} dataKey="Período 2" fill="#0ea5e9" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="Período 2" position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                        <Bar
+                          name={temporalStats.labels.p2}
+                          dataKey="Período 2"
+                          fill="#0ea5e9"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <LabelList
+                            dataKey="Período 2"
+                            position="top"
+                            style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -739,32 +873,55 @@ function ComparisonPage() {
                 <div className="rounded-2xl border-l-4 border-l-primary border border-border/60 bg-card p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-ember font-display font-bold text-primary-foreground text-sm shadow-ember shrink-0">
-                      {colabStats.a.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                      {colabStats.a.name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="font-display font-bold text-lg text-foreground leading-tight">{colabStats.a.name}</h3>
+                      <h3 className="font-display font-bold text-lg text-foreground leading-tight">
+                        {colabStats.a.name}
+                      </h3>
                       <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                        Crachá: {profiles.find(p => p.id === colabIdA)?.badge || "-"}
+                        Crachá: {profiles.find((p) => p.id === colabIdA)?.badge || "-"}
                       </span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/40">
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Taxa de Conclusão</span>
-                      <span className="text-xl font-black text-primary tabular-nums mt-1 block">{colabStats.a.rate}%</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Taxa de Conclusão
+                      </span>
+                      <span className="text-xl font-black text-primary tabular-nums mt-1 block">
+                        {colabStats.a.rate}%
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Tempo Ativo Total</span>
-                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">{colabStats.a.activeHrs}h</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Tempo Ativo Total
+                      </span>
+                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">
+                        {colabStats.a.activeHrs}h
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Tempo Médio/Tarefa</span>
-                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">{colabStats.a.avgActiveMin}m</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Tempo Médio/Tarefa
+                      </span>
+                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">
+                        {colabStats.a.avgActiveMin}m
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Pausas Totais</span>
-                      <span className="text-xl font-black text-purple-400 tabular-nums mt-1 block">{colabStats.a.pauseCount}</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Pausas Totais
+                      </span>
+                      <span className="text-xl font-black text-purple-400 tabular-nums mt-1 block">
+                        {colabStats.a.pauseCount}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -773,32 +930,55 @@ function ComparisonPage() {
                 <div className="rounded-2xl border-l-4 border-l-info border border-border/60 bg-card p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="grid h-12 w-12 place-items-center rounded-xl bg-info/20 text-info font-display font-bold text-sm shrink-0 border border-info/30">
-                      {colabStats.b.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                      {colabStats.b.name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="font-display font-bold text-lg text-foreground leading-tight">{colabStats.b.name}</h3>
+                      <h3 className="font-display font-bold text-lg text-foreground leading-tight">
+                        {colabStats.b.name}
+                      </h3>
                       <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                        Crachá: {profiles.find(p => p.id === colabIdB)?.badge || "-"}
+                        Crachá: {profiles.find((p) => p.id === colabIdB)?.badge || "-"}
                       </span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/40">
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Taxa de Conclusão</span>
-                      <span className="text-xl font-black text-info tabular-nums mt-1 block">{colabStats.b.rate}%</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Taxa de Conclusão
+                      </span>
+                      <span className="text-xl font-black text-info tabular-nums mt-1 block">
+                        {colabStats.b.rate}%
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Tempo Ativo Total</span>
-                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">{colabStats.b.activeHrs}h</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Tempo Ativo Total
+                      </span>
+                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">
+                        {colabStats.b.activeHrs}h
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Tempo Médio/Tarefa</span>
-                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">{colabStats.b.avgActiveMin}m</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Tempo Médio/Tarefa
+                      </span>
+                      <span className="text-xl font-black text-foreground tabular-nums mt-1 block">
+                        {colabStats.b.avgActiveMin}m
+                      </span>
                     </div>
                     <div className="bg-muted/10 p-3 rounded-lg border border-border/30 text-center">
-                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">Pausas Totais</span>
-                      <span className="text-xl font-black text-purple-400 tabular-nums mt-1 block">{colabStats.b.pauseCount}</span>
+                      <span className="text-[10px] block text-muted-foreground uppercase font-semibold">
+                        Pausas Totais
+                      </span>
+                      <span className="text-xl font-black text-purple-400 tabular-nums mt-1 block">
+                        {colabStats.b.pauseCount}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -816,13 +996,37 @@ function ComparisonPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                       <XAxis dataKey="name" stroke="#888" fontSize={11} />
                       <YAxis stroke="#888" fontSize={10} />
-                      <Tooltip contentStyle={{ backgroundColor: "#1e1e2e", borderColor: "#333", color: "#fff" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1e1e2e",
+                          borderColor: "#333",
+                          color: "#fff",
+                        }}
+                      />
                       <Legend />
-                      <Bar name={colabStats.a.name} dataKey={colabStats.a.name} fill="#f97316" radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey={colabStats.a.name} position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                      <Bar
+                        name={colabStats.a.name}
+                        dataKey={colabStats.a.name}
+                        fill="#f97316"
+                        radius={[4, 4, 0, 0]}
+                      >
+                        <LabelList
+                          dataKey={colabStats.a.name}
+                          position="top"
+                          style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                        />
                       </Bar>
-                      <Bar name={colabStats.b.name} dataKey={colabStats.b.name} fill="#0ea5e9" radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey={colabStats.b.name} position="top" style={{ fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold' }} />
+                      <Bar
+                        name={colabStats.b.name}
+                        dataKey={colabStats.b.name}
+                        fill="#0ea5e9"
+                        radius={[4, 4, 0, 0]}
+                      >
+                        <LabelList
+                          dataKey={colabStats.b.name}
+                          position="top"
+                          style={{ fill: "#a1a1aa", fontSize: 9, fontWeight: "bold" }}
+                        />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -834,7 +1038,8 @@ function ComparisonPage() {
               <Users className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
               <h3 className="font-semibold text-foreground text-lg">Nenhum comparador active</h3>
               <p className="text-sm mt-1 max-w-md mx-auto">
-                Selecione dois colaboradores diferentes e o período de análise acima para comparar a produtividade lado a lado.
+                Selecione dois colaboradores diferentes e o período de análise acima para comparar a
+                produtividade lado a lado.
               </p>
             </div>
           )}

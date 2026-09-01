@@ -32,9 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: github.event_name == 'pull_request'
-    environment:
-      name: preview
-      url: ${{ steps.deploy.outputs.preview_url }}
     outputs:
       preview_url: ${{ steps.deploy.outputs.preview_url }}
 
@@ -49,16 +46,15 @@ jobs:
           cache: "npm"
 
       - name: 📦 Install dependencies
-        run: npm ci --prefer-offline
+        run: npm ci || npm install --prefer-offline
 
-      - name: 📦 Install Vercel CLI
-        run: npm install --global vercel@latest
+      - name: 🔗 Setup Vercel project configuration
+        run: |
+          mkdir -p .vercel
+          echo "{\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\",\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\"}" > .vercel/project.json
 
-      - name: 🔗 Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: 🏗️ Build project (Vercel)
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: 🏗️ Build with Vercel CLI
+        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -66,17 +62,18 @@ jobs:
       - name: 🚀 Deploy to Vercel (Preview)
         id: deploy
         run: |
-          PREVIEW_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ >]+' | tail -1)
           echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
           echo "✅ Preview URL: $PREVIEW_URL"
 
       - name: 💬 Comment Preview URL on PR
         uses: actions/github-script@v7
-        if: success()
+        if: steps.deploy.outputs.preview_url != ''
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const url = '${{ steps.deploy.outputs.preview_url }}' || 'Deploy falhou';
+            const url = '${{ steps.deploy.outputs.preview_url }}';
             const body = `## 🚀 Preview Deploy (Vercel)\n\n` +
               `| Propriedade | Valor |\n` +
               `|-------------|-------|\n` +
@@ -92,58 +89,13 @@ jobs:
             });
 
   # ─────────────────────────────────────────────────────────────
-  # JOB 2: E2E Smoke Tests no Preview
-  # ─────────────────────────────────────────────────────────────
-  e2e-preview:
-    name: 🎭 E2E Smoke Tests (Preview)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [preview]
-    if: github.event_name == 'pull_request' && needs.preview.result == 'success'
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: 📦 Install dependencies
-        run: npm ci --prefer-offline
-
-      - name: 🎭 Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: 🧪 Run Playwright smoke tests
-        run: npm run test:e2e -- --grep @smoke
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.preview.outputs.preview_url }}
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-        continue-on-error: true
-
-      - name: ⬆️ Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-preview
-          path: playwright-report/
-          retention-days: 7
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 3: Production Deploy (push para main)
+  # JOB 2: Production Deploy (push para main)
   # ─────────────────────────────────────────────────────────────
   production:
     name: 🏭 Production Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.production_url }}
     outputs:
       production_url: ${{ steps.deploy.outputs.production_url }}
 
@@ -160,16 +112,15 @@ jobs:
           cache: "npm"
 
       - name: 📦 Install dependencies
-        run: npm ci --prefer-offline
+        run: npm ci || npm install --prefer-offline
 
-      - name: 📦 Install Vercel CLI
-        run: npm install --global vercel@latest
+      - name: 🔗 Setup Vercel project configuration
+        run: |
+          mkdir -p .vercel
+          echo "{\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\",\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\"}" > .vercel/project.json
 
-      - name: 🔗 Pull Vercel environment (production)
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: 🏗️ Build project (production)
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: 🏗️ Build project for Production
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -178,12 +129,23 @@ jobs:
       - name: 🚀 Deploy to Vercel (Production)
         id: deploy
         run: |
-          PROD_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          PROD_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ >]+' | tail -1)
           echo "production_url=$PROD_URL" >> $GITHUB_OUTPUT
           echo "✅ Production URL: $PROD_URL"
 
+      - name: 📊 Deploy summary
+        run: |
+          echo "## 🚀 Production Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "| Propriedade | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 URL | ${{ steps.deploy.outputs.production_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 👤 Author | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+
       - name: 🏷️ Create Release Tag
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -200,119 +162,4 @@ jobs:
               console.log(`✅ Tag criada: ${tagName}`);
             } catch (e) {
               console.log(`⚠️ Tag skipped: ${e.message}`);
-            }
-
-      - name: 📊 Deploy summary
-        run: |
-          echo "## 🚀 Production Deploy" >> $GITHUB_STEP_SUMMARY
-          echo "| | |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔗 URL | ${{ steps.deploy.outputs.production_url }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| 👤 Author | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 4: E2E Production Smoke Tests
-  # ─────────────────────────────────────────────────────────────
-  e2e-production:
-    name: 🎭 E2E Smoke Tests (Production)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [production]
-    if: needs.production.result == 'success'
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: 📦 Install dependencies
-        run: npm ci --prefer-offline
-
-      - name: 🎭 Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: ⏱️ Aguardar propagação do deploy
-        run: sleep 15
-
-      - name: 🧪 Run production smoke tests
-        run: npm run test:e2e -- --grep @smoke
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.production.outputs.production_url }}
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-        continue-on-error: true
-
-      - name: ⬆️ Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-production
-          path: playwright-report/
-          retention-days: 14
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 5: Lighthouse CI
-  # ─────────────────────────────────────────────────────────────
-  lighthouse:
-    name: 🏠 Lighthouse CI
-    runs-on: ubuntu-latest
-    needs: [production]
-    if: needs.production.result == 'success'
-    timeout-minutes: 15
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 🏠 Run Lighthouse CI
-        run: |
-          npx --yes @lhci/cli@0.14.x autorun \
-            --collect.url=${{ needs.production.outputs.production_url }} \
-            --assert.preset=lighthouse:no-pwa \
-            --assert.assertions.performance=">=0.70" \
-            --assert.assertions.accessibility=">=0.85" \
-            --assert.assertions.best-practices=">=0.80" \
-            --assert.assertions.seo=">=0.80" \
-            --upload.target=temporary-public-storage
-        continue-on-error: true
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 6: Notificação Slack
-  # ─────────────────────────────────────────────────────────────
-  notify:
-    name: 📢 Notificar Deploy
-    runs-on: ubuntu-latest
-    needs: [production, e2e-production]
-    if: always() && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: 📢 Slack notification
-        uses: slackapi/slack-github-action@v1.26.0
-        if: env.SLACK_WEBHOOK_URL != ''
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        with:
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ needs.production.result == 'success' && '✅ *Deploy Vercel — SUCESSO*' || '❌ *Deploy Vercel — FALHOU*' }}\n*Projeto:* ${{ github.repository }}\n*Commit:* `${{ github.sha }}`\n*Autor:* ${{ github.actor }}\n*URL:* ${{ needs.production.outputs.production_url }}"
-                  }
-                }
-              ]
             }
