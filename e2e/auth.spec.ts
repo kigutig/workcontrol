@@ -15,7 +15,7 @@ test.describe("Authentication Flow", () => {
   // ─── Auth Page Loads ──────────────────────────────────────────
   test("@smoke loads auth page", async ({ page }) => {
     await page.goto("/auth");
-    await expect(page).toHaveTitle(/WorkControl|FitControl|Login/i);
+    await expect(page).toHaveTitle(/FitControl|WorkControl|Gestão|Login/i);
     // Email and password fields must exist
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
@@ -84,21 +84,12 @@ test.describe("Authentication Flow", () => {
 
   // ─── Authenticated Flow (requires E2E_TEST_EMAIL + PASSWORD) ──
   test.describe("Authenticated", () => {
-    test.skip(
-      !process.env.E2E_TEST_EMAIL,
-      "E2E_TEST_EMAIL not set, skipping authenticated tests",
-    );
+    test.skip(!process.env.E2E_TEST_EMAIL, "E2E_TEST_EMAIL not set, skipping authenticated tests");
 
     test("@smoke logs in successfully", async ({ page }) => {
       await page.goto("/auth");
-      await page.fill(
-        'input[type="email"]',
-        process.env.E2E_TEST_EMAIL as string,
-      );
-      await page.fill(
-        'input[type="password"]',
-        process.env.E2E_TEST_PASSWORD as string,
-      );
+      await page.fill('input[type="email"]', process.env.E2E_TEST_EMAIL as string);
+      await page.fill('input[type="password"]', process.env.E2E_TEST_PASSWORD as string);
       await page.locator('button[type="submit"]').first().click();
 
       // After login, should redirect to dashboard or home

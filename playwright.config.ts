@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:4173";
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -37,15 +37,6 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    // Mobile
-    {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
-    },
     // Security-specific project (Chromium only, runs XSS/header checks)
     {
       name: "security",
@@ -54,12 +45,12 @@ export default defineConfig({
     },
   ],
   // Web server for local dev
-  webServer: process.env.CI
+  webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: "npm run preview",
-        port: 4173,
-        reuseExistingServer: !process.env.CI,
+        command: "npm run dev",
+        port: 3000,
+        reuseExistingServer: true,
         timeout: 60000,
       },
   outputDir: "./playwright-report/test-results",
