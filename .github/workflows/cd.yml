@@ -1,0 +1,298 @@
+name: 🚀 CD — Deploy Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deploy environment"
+        required: true
+        default: "preview"
+        type: choice
+        options: [preview, production]
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1: Preview Deploy (PRs)
+  # ─────────────────────────────────────────────────────────────
+  preview:
+    name: 🔍 Preview Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request'
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      preview_url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: 🏗️ Build (preview mode)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: 🚀 Deploy to Cloudflare Pages (Preview)
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=workcontrol --branch=pr-${{ github.event.pull_request.number }}
+
+      - name: 💬 Comment Preview URL on PR
+        uses: actions/github-script@v7
+        if: success()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}' || 'Deploy failed';
+            const body = `## 🚀 Preview Deploy\n\n` +
+              `| Property | Value |\n` +
+              `|----------|-------|\n` +
+              `| 🔗 URL | [${url}](${url}) |\n` +
+              `| 📦 Commit | \`${{ github.sha }}\` |\n` +
+              `| 🌿 Branch | \`${{ github.head_ref }}\` |\n\n` +
+              `> ⚡ Preview updates automatically on new commits.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2: E2E Smoke Tests on Preview
+  # ─────────────────────────────────────────────────────────────
+  e2e-preview:
+    name: 🎭 E2E Smoke Tests (Preview)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [preview]
+    if: github.event_name == 'pull_request' && needs.preview.result == 'success'
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: 🧪 Run Playwright E2E smoke tests
+        run: npm run test:e2e -- --grep @smoke
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ needs.preview.outputs.preview_url }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+        continue-on-error: true
+
+      - name: ⬆️ Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-preview
+          path: playwright-report/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 3: Production Deploy (main branch only)
+  # ─────────────────────────────────────────────────────────────
+  production:
+    name: 🏭 Production Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://workcontrol.pages.dev
+    outputs:
+      deploy_url: https://workcontrol.pages.dev
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: 🏗️ Build (production)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: 🚀 Deploy to Cloudflare Pages (Production)
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=workcontrol --branch=main
+
+      - name: 🏷️ Create Release Tag
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const date = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+            const sha = context.sha.substring(0, 7);
+            const tagName = `release-${date}-${sha}`;
+            try {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${tagName}`,
+                sha: context.sha
+              });
+              console.log(`✅ Created tag: ${tagName}`);
+            } catch (e) {
+              console.log(`⚠️ Tag creation skipped: ${e.message}`);
+            }
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 4: E2E Production Smoke Tests
+  # ─────────────────────────────────────────────────────────────
+  e2e-production:
+    name: 🎭 E2E Smoke Tests (Production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [production]
+    if: needs.production.result == 'success'
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: ⏱️ Wait for deployment propagation
+        run: sleep 30
+
+      - name: 🧪 Run production smoke tests
+        run: npm run test:e2e -- --grep @smoke
+        env:
+          PLAYWRIGHT_BASE_URL: https://workcontrol.pages.dev
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+        continue-on-error: true
+
+      - name: ⬆️ Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-production
+          path: playwright-report/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 5: Lighthouse CI Performance Audit
+  # ─────────────────────────────────────────────────────────────
+  lighthouse:
+    name: 🏠 Lighthouse CI
+    runs-on: ubuntu-latest
+    needs: [production]
+    if: needs.production.result == 'success'
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🏠 Run Lighthouse CI
+        run: |
+          npx --yes @lhci/cli@0.14.x autorun \
+            --collect.url=https://workcontrol.pages.dev \
+            --assert.preset=lighthouse:no-pwa \
+            --assert.assertions.performance=">=0.70" \
+            --assert.assertions.accessibility=">=0.85" \
+            --assert.assertions.best-practices=">=0.80" \
+            --assert.assertions.seo=">=0.80" \
+            --upload.target=temporary-public-storage
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 6: Notify Slack on Production Deploy
+  # ─────────────────────────────────────────────────────────────
+  notify:
+    name: 📢 Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [production, e2e-production]
+    if: always() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📢 Notify Slack
+        uses: slackapi/slack-github-action@v1.26.0
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ needs.production.result == 'success' && '✅ *Production Deploy SUCCESS*' || '❌ *Production Deploy FAILED*' }}\n*Repo:* ${{ github.repository }}\n*Commit:* `${{ github.sha }}`\n*Author:* ${{ github.actor }}\n*URL:* https://workcontrol.pages.dev"
+                  }
+                }
+              ]
+            }

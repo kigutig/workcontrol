@@ -1,0 +1,23 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "WorkControl Gitleaks Config"
+
+[extend]
+# Extend the default gitleaks config
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+  ".github/SECRETS.md",   # Documentation file about secrets (not actual secrets)
+  "src/__tests__/setup.ts", # Mock Supabase keys in test setup
+  ".env.example",          # Example env file
+]
+regexes = [
+  # Allow placeholder values used in tests/mocks
+  "test-anon-key",
+  "placeholder-key",
+  "https://test.supabase.co",
+  "https://placeholder.supabase.co",
+]
