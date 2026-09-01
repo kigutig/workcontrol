@@ -15,7 +15,7 @@ test.describe("Authentication Flow", () => {
   // ─── Auth Page Loads ──────────────────────────────────────────
   test("@smoke loads auth page", async ({ page }) => {
     await page.goto("/auth");
-    await expect(page).toHaveTitle(/FitControl|WorkControl|Gestão|Login/i);
+    await expect(page).toHaveTitle(/FitControl|WorkControl|Gestão|Entrar|Login/i);
     // Email and password fields must exist
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();

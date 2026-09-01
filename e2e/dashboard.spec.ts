@@ -28,9 +28,7 @@ test.describe("Dashboard (Public/Redirect)", () => {
     // Filter out known non-critical errors
     const criticalErrors = jsErrors.filter(
       (e) =>
-        !e.includes("ResizeObserver") &&
-        !e.includes("Non-Error") &&
-        !e.includes("ChunkLoadError"),
+        !e.includes("ResizeObserver") && !e.includes("Non-Error") && !e.includes("ChunkLoadError"),
     );
 
     expect(criticalErrors.length).toBe(0);
@@ -38,7 +36,9 @@ test.describe("Dashboard (Public/Redirect)", () => {
 
   test("@smoke auth page is accessible", async ({ page }) => {
     await page.goto("/auth");
-    await expect(page.locator("main, #root, [role='main']").first()).toBeVisible();
+    await expect(
+      page.locator("form, input[type='email'], button[type='submit']").first(),
+    ).toBeVisible();
   });
 });
 
