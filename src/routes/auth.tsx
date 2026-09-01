@@ -147,6 +147,7 @@ function AuthPage() {
                     id="login-email"
                     name="email"
                     type="email"
+                    autoComplete="email"
                     required
                     placeholder="voce@fitcontrol.com"
                     className="h-11"
@@ -158,6 +159,7 @@ function AuthPage() {
                     id="login-password"
                     name="password"
                     type="password"
+                    autoComplete="current-password"
                     required
                     placeholder="••••••••"
                     className="h-11"

@@ -19,7 +19,10 @@ test.describe("Security Headers", () => {
       expect(headers["x-content-type-options"]).toBe("nosniff");
     }
     // Note: Cloudflare Pages may inject this
-    console.log("[Security] x-content-type-options:", headers["x-content-type-options"] ?? "not set");
+    console.log(
+      "[Security] x-content-type-options:",
+      headers["x-content-type-options"] ?? "not set",
+    );
   });
 
   test("has X-Frame-Options or CSP frame-ancestors", async ({ page }) => {
@@ -29,11 +32,13 @@ test.describe("Security Headers", () => {
     const csp = headers["content-security-policy"];
 
     const hasFrameProtection =
-      xFrameOptions !== undefined ||
-      (csp !== undefined && csp.includes("frame-ancestors"));
+      xFrameOptions !== undefined || (csp !== undefined && csp.includes("frame-ancestors"));
 
     console.log("[Security] x-frame-options:", xFrameOptions ?? "not set");
-    console.log("[Security] csp frame-ancestors:", csp?.includes("frame-ancestors") ? "present" : "not set");
+    console.log(
+      "[Security] csp frame-ancestors:",
+      csp?.includes("frame-ancestors") ? "present" : "not set",
+    );
 
     // At least one framing protection should be present
     // This is a warning test — report but don't fail hard
@@ -43,16 +48,12 @@ test.describe("Security Headers", () => {
   });
 
   test("auth endpoint uses HTTPS in production", async ({ page }) => {
-    const url = page.url();
-    if (!url.includes("localhost") && !url.includes("127.0.0.1")) {
-      expect(url.startsWith("https://")).toBe(true);
-    } else {
-      console.log("[Security] Skipping HTTPS check on localhost");
-    }
     await page.goto("/auth");
     const finalUrl = page.url();
-    if (!finalUrl.includes("localhost")) {
+    if (!finalUrl.includes("localhost") && !finalUrl.includes("127.0.0.1")) {
       expect(finalUrl.startsWith("https://")).toBe(true);
+    } else {
+      console.log("[Security] Skipping HTTPS check on localhost");
     }
   });
 });
@@ -61,7 +62,7 @@ test.describe("XSS Prevention", () => {
   test("@smoke auth form rejects script injection in email", async ({ page }) => {
     await page.goto("/auth");
 
-    const xssPayload = '<script>window.__xss_triggered = true;</script>';
+    const xssPayload = "<script>window.__xss_triggered = true;</script>";
     await page.fill('input[type="email"]', xssPayload);
     await page.fill('input[type="password"]', "password123");
     await page.locator('button[type="submit"]').first().click();
@@ -89,7 +90,7 @@ test.describe("XSS Prevention", () => {
   });
 
   test("hash injection does not execute scripts", async ({ page }) => {
-    await page.goto('/auth#<script>window.__xss3=1</script>');
+    await page.goto("/auth#<script>window.__xss3=1</script>");
     await page.waitForTimeout(1000);
 
     const xssExecuted = await page.evaluate(() => {
@@ -140,9 +141,7 @@ test.describe("Authentication Security", () => {
 });
 
 test.describe("Content Security", () => {
-  test("application does not load scripts from untrusted CDNs", async ({
-    page,
-  }) => {
+  test("application does not load scripts from untrusted CDNs", async ({ page }) => {
     const scriptSources: string[] = [];
 
     page.on("request", (req) => {
