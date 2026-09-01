@@ -107,12 +107,24 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
       }
 
       const label = match[1];
-      const url = match[2];
-      const href = url.startsWith("http") ? url : `https://${url}`;
+      const rawUrl = match[2].trim();
+      let safeHref = "#";
+      try {
+        const candidate = rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
+          ? rawUrl
+          : `https://${rawUrl}`;
+        const parsed = new URL(candidate);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+          safeHref = parsed.toString();
+        }
+      } catch {
+        safeHref = "#";
+      }
+
       parts.push(
         <a
           key={`link-${keyIdx++}`}
-          href={href}
+          href={safeHref}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary underline hover:text-primary/80 font-medium inline-flex items-center gap-0.5"

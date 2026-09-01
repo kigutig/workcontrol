@@ -32,26 +32,29 @@ export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
  */
 export function sanitizeText(input: unknown): string {
   if (typeof input !== "string") return "";
-  return (
-    input
-      .trim()
-      // Remove dangerous tag content (script, style, iframe, etc.) including inner content
-      .replace(/<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi, "")
-      // Strip remaining HTML tags (self-closing and open/close)
-      .replace(/<[^>]*>/g, "")
-      .replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
-        // Re-encode HTML entities
-        const entities: Record<string, string> = {
-          "&amp;": "&",
-          "&lt;": "<",
-          "&gt;": ">",
-          "&quot;": '"',
-          "&#x27;": "'",
-          "&#39;": "'",
-        };
-        return entities[match] ?? match;
-      })
-  );
+  let clean = input.trim();
+  let prev = "";
+  // Iterative stripping prevents multi-character nesting bypasses (e.g. <<script>script>)
+  while (clean !== prev) {
+    prev = clean;
+    clean = clean.replace(
+      /<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi,
+      "",
+    );
+    clean = clean.replace(/<[^>]*>/g, "");
+  }
+  return clean.replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
+    // Re-encode HTML entities
+    const entities: Record<string, string> = {
+      "&amp;": "&",
+      "&lt;": "<",
+      "&gt;": ">",
+      "&quot;": '"',
+      "&#x27;": "'",
+      "&#39;": "'",
+    };
+    return entities[match] ?? match;
+  });
 }
 
 /**
