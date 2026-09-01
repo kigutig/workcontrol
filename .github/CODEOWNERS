@@ -1,14 +1,14 @@
 # Global code owners — all files require review from these owners
-* @kigutifenix
+* @kigutifenix-crypto
 
 # Workflow and CI/CD changes require extra review
-.github/ @kigutifenix
+.github/ @kigutifenix-crypto
 
 # Security-sensitive files
-src/integrations/ @kigutifenix
-src/lib/ @kigutifenix
-supabase/ @kigutifenix
+src/integrations/ @kigutifenix-crypto
+src/lib/ @kigutifenix-crypto
+supabase/ @kigutifenix-crypto
 
 # Dependencies
-package.json @kigutifenix
-package-lock.json @kigutifenix
+package.json @kigutifenix-crypto
+package-lock.json @kigutifenix-crypto
