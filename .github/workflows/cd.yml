@@ -32,7 +32,7 @@ jobs:
     name: 🔍 Preview Deploy (Vercel)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && secrets.VERCEL_TOKEN != ''
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     outputs:
       preview_url: ${{ steps.deploy.outputs.preview_url }}
 
