@@ -111,9 +111,17 @@ describe("isValidEmail", () => {
 // ─── isValidUUID ────────────────────────────────────────────────
 describe("isValidUUID", () => {
   it("validates correct UUIDs v4", () => {
-    expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(false); // v1 UUID
+    // These are valid UUID v4 (3rd group starts with 4, 4th with 8/9/a/b)
+    expect(isValidUUID("550e8400-e29b-41d4-a716-446655440000")).toBe(true);  // 4th group = a716 ✓
     expect(isValidUUID("f47ac10b-58cc-4372-a567-0e02b2c3d479")).toBe(true);
-    expect(isValidUUID("6ba7b810-9dad-41d1-80b4-00c04fd430c8")).toBe(false); // v1
+    expect(isValidUUID("a8098c1a-f86e-4fbf-8a4c-e2f6f2a9b7c1")).toBe(true);
+  });
+
+  it("rejects non-v4 UUIDs", () => {
+    // UUID v1 — 3rd segment starts with 1 (not 4)
+    expect(isValidUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")).toBe(false);
+    // UUID v3 — 3rd segment starts with 3
+    expect(isValidUUID("9073926b-929f-31c2-abc9-fad77ae3e8eb")).toBe(false);
   });
 
   it("rejects invalid UUIDs", () => {
@@ -122,6 +130,7 @@ describe("isValidUUID", () => {
     expect(isValidUUID("123e4567-e89b-12d3-a456-42661417400")).toBe(false); // too short
   });
 });
+
 
 // ─── isSafeUrl ──────────────────────────────────────────────────
 describe("isSafeUrl", () => {

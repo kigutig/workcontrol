@@ -39,7 +39,10 @@ export function sanitizeText(input: unknown): string {
   if (typeof input !== "string") return "";
   return input
     .trim()
-    .replace(/<[^>]*>/g, "") // Strip HTML tags
+    // Remove dangerous tag content (script, style, iframe, etc.) including inner content
+    .replace(/<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    // Strip remaining HTML tags (self-closing and open/close)
+    .replace(/<[^>]*>/g, "")
     .replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
       // Re-encode HTML entities
       const entities: Record<string, string> = {
@@ -86,9 +89,11 @@ export function isValidEmail(email: string): boolean {
  * Validate a UUID v4 string.
  */
 export function isValidUUID(uuid: string): boolean {
-  const uuidRegex =
+  // Matches UUID v4: third segment MUST start with '4'
+  // and fourth segment MUST start with 8, 9, a, or b
+  const uuidV4Regex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
+  return uuidV4Regex.test(uuid);
 }
 
 /**

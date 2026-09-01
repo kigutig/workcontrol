@@ -3,9 +3,11 @@
  * Configures global test environment, mocks and matchers
  */
 
+import React from "react";
 import "@testing-library/jest-dom";
 import { vi, beforeAll, afterAll, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
+
 
 // ─── Auto cleanup after each test ───────────────────────────────
 afterEach(() => {
@@ -69,8 +71,13 @@ vi.mock("@tanstack/react-router", async () => {
       navigate: vi.fn(),
       invalidate: vi.fn(),
     }),
-    Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode }) => {
-      return <a {...props}>{children}</a>;
+    Link: ({
+      children,
+      ...props
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+      children?: React.ReactNode;
+    }) => {
+      return React.createElement("a", props, children);
     },
   };
 });
