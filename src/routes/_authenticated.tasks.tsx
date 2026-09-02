@@ -421,15 +421,15 @@ function TasksKanban() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 items-start">
             {STATUS.map((col) => {
               const colTasks = filteredTasks.filter((t) => t.status === col.id);
               return (
                 <div
                   key={col.id}
-                  className="rounded-2xl border border-border/60 bg-card/50 p-4 min-h-[60vh]"
+                  className="flex flex-col rounded-2xl border border-border/60 bg-card/50 p-4 h-[calc(100vh-14.5rem)] min-h-[500px] max-h-[820px]"
                 >
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/40 shrink-0">
                     <div className="flex items-center gap-2">
                       <span
                         className={cn(
@@ -439,12 +439,12 @@ function TasksKanban() {
                       >
                         {col.label}
                       </span>
-                      <span className="text-sm text-muted-foreground tabular-nums">
+                      <span className="text-sm font-semibold text-muted-foreground tabular-nums">
                         {colTasks.length}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-1 kanban-scroll">
                     {colTasks.map((t) => {
                       const idx = STATUS.findIndex((s) => s.id === col.id);
                       const canMove = isSupervisor || t.assignee_id === user?.id;
@@ -632,8 +632,8 @@ function TasksKanban() {
                       );
                     })}
                     {colTasks.length === 0 && (
-                      <div className="rounded-xl border border-dashed border-border/50 p-6 text-center text-xs text-muted-foreground">
-                        Vazio
+                      <div className="h-32 flex items-center justify-center rounded-xl border border-dashed border-border/40 p-6 text-center text-xs text-muted-foreground/70">
+                        Nenhuma tarefa nesta etapa
                       </div>
                     )}
                   </div>
