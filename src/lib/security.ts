@@ -32,29 +32,56 @@ export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
  */
 export function sanitizeText(input: unknown): string {
   if (typeof input !== "string") return "";
-  let clean = input.trim();
-  let prev = "";
-  // Iterative stripping prevents multi-character nesting bypasses (e.g. <<script>script>)
-  while (clean !== prev) {
-    prev = clean;
-    clean = clean.replace(
-      /<(script|style|iframe|object|embed|link)[^>]*>[\s\S]*?<\/\1>/gi,
-      "",
-    );
-    clean = clean.replace(/<[^>]*>/g, "");
+  const trimmed = input.trim();
+  const DANGEROUS_TAGS = ["script", "style", "iframe", "object", "embed", "link"];
+  let cleaned = "";
+  let i = 0;
+  const len = trimmed.length;
+
+  while (i < len) {
+    if (trimmed[i] === "<") {
+      const tagEnd = trimmed.indexOf(">", i);
+      if (tagEnd === -1) {
+        // Unclosed tag at the end of string, strip it
+        break;
+      }
+      const tagText = trimmed.slice(i + 1, tagEnd).trim().toLowerCase();
+      const tagName = tagText.split(/[\s/>]/)[0];
+
+      if (DANGEROUS_TAGS.includes(tagName)) {
+        const closeTag = `</${tagName}>`;
+        const closeIdx = trimmed.toLowerCase().indexOf(closeTag, tagEnd + 1);
+        if (closeIdx !== -1) {
+          i = closeIdx + closeTag.length;
+          continue;
+        } else {
+          // Unclosed dangerous block, strip remainder
+          break;
+        }
+      }
+
+      // Regular HTML tag, skip past it
+      i = tagEnd + 1;
+      continue;
+    }
+
+    cleaned += trimmed[i];
+    i++;
   }
-  return clean.replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
-    // Re-encode HTML entities
-    const entities: Record<string, string> = {
-      "&amp;": "&",
-      "&lt;": "<",
-      "&gt;": ">",
-      "&quot;": '"',
-      "&#x27;": "'",
-      "&#39;": "'",
-    };
-    return entities[match] ?? match;
-  });
+
+  return cleaned
+    .replace(/&(?:amp|lt|gt|quot|#x27|#39);/gi, (match) => {
+      const entities: Record<string, string> = {
+        "&amp;": "&",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&quot;": '"',
+        "&#x27;": "'",
+        "&#39;": "'",
+      };
+      return entities[match] ?? match;
+    })
+    .trim();
 }
 
 /**
