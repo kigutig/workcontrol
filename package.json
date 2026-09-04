@@ -20,11 +20,11 @@
     "test:all": "npm run test:coverage && npm run test:e2e"
   },
   "dependencies": {
-    "@capacitor/android": "^8.4.2",
-    "@capacitor/camera": "^8.2.1",
-    "@capacitor/cli": "^8.4.2",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/camera": "^8.2.3",
+    "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.4.2",
-    "@capacitor/local-notifications": "^8.2.1",
+    "@capacitor/local-notifications": "^8.3.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
