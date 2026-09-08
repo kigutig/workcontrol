@@ -51,7 +51,7 @@ jobs:
             --mc-type application || true
 
       - name: ⬆️ Upload SBOM report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sbom-report
@@ -103,7 +103,7 @@ jobs:
             . || true
 
       - name: ⬆️ Upload Semgrep report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: semgrep-report
