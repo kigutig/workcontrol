@@ -20,7 +20,7 @@
     "test:all": "npm run test:coverage && npm run test:e2e"
   },
   "dependencies": {
-    "@capacitor/android": "^8.4.2",
+    "@capacitor/android": "^8.4.3",
     "@capacitor/camera": "^8.2.1",
     "@capacitor/cli": "^8.4.2",
     "@capacitor/core": "^8.4.2",
